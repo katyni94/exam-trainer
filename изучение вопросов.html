@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Тренер</title>
+<style>
+body{font-family:sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
+header{background:#1e3a8a;color:#fff;padding:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+header h1{margin:0;font-size:1rem;flex:1}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button,.btn{background:#3b82f6;color:#fff;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.85rem}
+nav button:hover,.btn:hover{background:#2563eb}
+nav button.active{background:#f59e0b}
+.btn.ghost{background:#e2e8f0;color:#0f172a}
+.btn.danger{background:#ef4444}
+main{padding:18px;max-width:960px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+h2{margin-top:0}
+label{display:block;margin:10px 0 4px;font-weight:600;font-size:.88rem}
+textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;font-size:.92rem}
+textarea.tall{min-height:220px;font-family:monospace;font-size:.82rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.row .btn{flex:0 0 auto}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin:8px 0}
+.card .meta{font-size:.75rem;color:#64748b;margin:4px 0}
+.card button{padding:5px 10px;margin-right:5px;margin-top:6px;font-size:.78rem}
+.study-box{background:#fff;border-radius:10px;padding:18px}
+.answer{background:#f8fafc;border-left:4px solid #3b82f6;padding:12px;border-radius:6px;margin:10px 0;white-space:pre-wrap;font-size:.92rem}
+.answer.plan{border-color:#10b981}
+.rating{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.rating button{padding:8px 14px;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:.85rem}
+.rating button:nth-child(1){background:#ef4444}
+.rating button:nth-child(2){background:#f59e0b}
+.rating button:nth-child(3){background:#3b82f6}
+.rating button:nth-child(4){background:#10b981}
+.preview{background:#fff;border-left:4px solid #3b82f6;padding:10px;margin:8px 0;border-radius:6px}
+.preview .q{font-weight:600;font-size:.92rem}
+.preview .a{font-size:.82rem;color:#475569;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:5px}
+.hint{font-size:.82rem;color:#64748b;margin-top:6px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;background:#e2e8f0;color:#475569;margin-left:5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Тренер</h1>
+  <nav>
+    <button data-tab="import" class="active">Импорт</button>
+    <button data-tab="topics">Темы</button>
+    <button data-tab="study">Учёба</button>
+  </nav>
+</header>
+<main>
+<section id="import" class="tab active">
+  <h2>Импорт</h2>
+  <p class="hint">Вставь текст в формате:<br>Тема 1. Название<br>...[текст]...<br>План ответа:<br>1. ...<br>2. ...</p>
+  <label>Текст</label>
+  <textarea id="import-text" class="tall"></textarea>
+  <div class="row">
+    <button class="btn" id="parse-btn">Разобрать</button>
+    <button class="btn ghost" id="clear-import">Очистить</button>
+  </div>
+  <div id="preview-block" style="display:none;margin-top:16px">
+    <h3>Предпросмотр <span class="pill" id="preview-count">0</span></h3>
+    <div id="preview-list"></div>
+    <button class="btn" id="add-all">Добавить все</button>
+  </div>
+</section>
+<section id="topics" class="tab">
+  <h2>Темы <span class="pill" id="topics-count">0</span></h2>
+  <div id="topics-list"></div>
+</section>
+<section id="study" class="tab">
+  <h2>Учёба</h2>
+  <div id="study-area" class="study-box"></div>
+</section>
+</main>
+<script>
+var cards = JSON.parse(localStorage.getItem("cards") || "[]");
+var preview = [];
+var studyQueue = [];
+var cur = null;
+
+function $(id){return document.getElementById(id);}
+function save(){localStorage.setItem("cards", JSON.stringify(cards));}
+function esc(t){var d=document.createElement("div");d.textContent=t||"";return d.innerHTML;}
+
+document.querySelectorAll("nav button").forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll("nav button").forEach(function(x){x.classList.remove("active");});
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active");});
+    b.classList.add("active");
+    $(b.dataset.tab).classList.add("active");
+    if(b.dataset.tab==="topics") renderTopics();
+    if(b.dataset.tab==="study") renderStudyStart();
+  };
+});
+
+function parseText(text){
+  var out = [];
+  var re = /^Тема\s+([\d.]+)[.:]?\s*(.+)$/gmi;
+  var matches = [];
+  var m;
+  while((m = re.exec(text)) !== null){
+    matches.push({index:m.index, num:m[1], question:m[2].trim()});
+  }
+  if(matches.length === 0){
+    out.push({num:"", group:"", question:"Без названия", answer:text, plan:autoPlan(text)});
+    return out;
+  }
+  for(var i=0;i<matches.length;i++){
+    var start = matches[i].index;
+    var end = (i+1 < matches.length) ? matches[i+1].index : text.length;
+    var block = text.substring(start, end);
+    var plan = "";
+    var pm = block.match(/План ответа\s*:?\s*\n([\s\S]*?)(?=\n(?:Мнемоника|Пример|Викторина|Тема \d)|$)/i);
+    if(pm){
+      plan = pm[1].split("\n").map(function(l){return l.replace(/^[\s\-•]+/,"").trim();}).filter(function(l){return l.length>3;}).map(function(p,i2){return /^\d/.test(p)?p:(i2+1)+". "+p;}).join("\n");
+    }
+    if(!plan) plan = autoPlan(block);
+    var group = matches[i].num.split(".")[0];
+out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan});
+  }
+  return out;
+}
+
+function autoPlan(body){
+  var lines = body.split("\n").map(function(l){return l.trim();}).filter(function(l){return l.length>15;});
+  var points = [];
+  for(var i=0;i<lines.length && points.length<7;i++){
+    var first = lines[i].split(/[.;!?]/)[0].trim();
+    if(first.length>15 && first.length<200) points.push(first);
+  }
+  if(points.length<3){
+    var sents = body.replace(/\n/g," ").split(/(?<=[.!?])\s+/).filter(function(s){return s.length>25;});
+    return sents.slice(0,6).map(function(s,i){return (i+1)+". "+s;}).join("\n");
+  }
+  return points.map(function(p,i){return (i+1)+". "+p;}).join("\n");
+}
+
+$("parse-btn").onclick = function(){
+  var raw = $("import-text").value;
+  if(!raw.trim()) return;
+  preview = parseText(raw);
+  $("preview-count").textContent = preview.length;
+  $("preview-list").innerHTML = preview.map(function(p,i){
+    return '<div class="preview"><div class="q">'+(i+1)+'. '+esc(p.question)+'</div><div class="a"><b>План:</b><br>'+esc(p.plan)+'</div></div>';
+  }).join("");
+  $("preview-block").style.display = "block";
+};
+
+$("clear-import").onclick = function(){
+  $("import-text").value = "";
+  $("preview-block").style.display = "none";
+};
+
+$("add-all").onclick = function(){
+  preview.forEach(function(p){
+    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, due:Date.now(), reps:0, interval:0, ease:2.5});
+  });
+  save();
+  $("preview-block").style.display = "none";
+  $("import-text").value = "";
+  alert("Добавлено: " + preview.length);
+  preview = [];
+  renderTopics();
+};
+
+function renderTopics(){
+  $("topics-count").textContent = cards.length;
+  if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем.</p>'; return;}
+  var groups = {};
+  cards.forEach(function(c){
+    var g = c.group || "—";
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(c);
+  });
+  var html = "";
+  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
+    var list = groups[g];
+    html += '<div style="margin:18px 0 6px;font-size:.85rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Тема '+g+' · '+list.length+' частей</div>';
+    html += list.map(function(c){
+      return '<div class="card" style="margin-left:14px"><strong>'+esc(c.question)+'</strong><div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div><button class="btn ghost" onclick="viewCard('+c.id+')">Показать</button><button class="btn danger" onclick="delCard('+c.id+')">Удалить</button></div>';
+    }).join("");
+  });
+  $("topics-list").innerHTML = html;
+}
+
+window.viewCard = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  alert("ВОПРОС:\n"+c.question+"\n\nПЛАН:\n"+c.plan+"\n\nОТВЕТ:\n"+c.answer.substring(0,1500));
+};
+
+window.delCard = function(id){
+  if(!confirm("Удалить?")) return;
+  cards = cards.filter(function(x){return x.id!==id;});
+  save(); renderTopics();
+};
+
+function renderStudyStart(){
+  var area = $("study-area");
+  if(!cards.length){area.innerHTML = "<p>Сначала импортируйте темы.</p>"; return;}
+  area.innerHTML = '<p>Всего тем: '+cards.length+'</p><button class="btn" id="start">Начать</button>';
+  $("start").onclick = function(){studyQueue = cards.slice(); nextCard();};
+}
+
+function nextCard(){
+  var area = $("study-area");
+  if(!studyQueue.length){area.innerHTML = "<p>Готово!</p>"; return;}
+  cur = studyQueue.shift();
+  area.innerHTML = '<h3>Вопрос</h3><p><strong>'+esc(cur.question)+'</strong></p><label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary>Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div></div>';
+  $("reveal").onclick = function(){$("ans").style.display="block";$("reveal").style.display="none";};
+  document.querySelectorAll(".rating button").forEach(function(b){b.onclick=function(){rateCard(parseInt(b.dataset.q));};});
+}
+
+function rateCard(q){
+  var now = Date.now();
+  if(q===0){cur.reps=0;cur.interval=0;cur.due=now+10*60*1000;}
+  else{
+    if(cur.reps===0) cur.interval = q===1?1:q===2?1:3;
+    else if(cur.reps===1) cur.interval = q===1?3:q===2?6:10;
+    else cur.interval = Math.round(cur.interval*cur.ease);
+    cur.reps++; cur.due = now + cur.interval*86400000;
+  }
+  save(); nextCard();
+}
+
+renderTopics();
+</script>
+</body>
+</html>
