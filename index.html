@@ -312,29 +312,30 @@ $("search").addEventListener("input", renderTopics);
 window.viewCard = function(id){
   var c = cards.filter(function(x){return x.id===id;})[0];
   if(!c) return;
-  // Удаляем старое модальное окно, если есть
   var old = document.getElementById("modal-view");
   if(old) old.remove();
   var modal = document.createElement("div");
   modal.id = "modal-view";
-  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.7);z-index:999;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.85);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
   var imgHtml = c.image ? '<img src="'+esc(c.image)+'" style="max-width:100%;border-radius:6px;margin:10px 0">' : '';
-  modal.innerHTML = '<div style="background:#fff;border-radius:12px;padding:18px;max-width:640px;width:100%;position:relative;margin:auto">'+
-    '<button id="modal-close" style="position:sticky;top:0;float:right;background:#ef4444;color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;z-index:10">✕</button>'+
-    '<h3 style="margin:0 0 10px;clear:none">'+esc(c.question)+'</h3>'+
-    imgHtml+
-    '<h4 style="margin:14px 0 6px;color:#10b981">ПЛАН</h4>'+
-    '<pre style="white-space:pre-wrap;font-family:inherit;background:#f0fdf4;padding:12px;border-radius:6px;font-size:.9rem;margin:0">'+esc(c.plan)+'</pre>'+
-    '<h4 style="margin:14px 0 6px;color:#3b82f6">ОТВЕТ</h4>'+
-    '<div style="background:#f8fafc;padding:12px;border-radius:6px;font-size:.9rem;white-space:pre-wrap">'+esc(c.answer)+'</div>'+
-    '<div style="margin-top:16px;text-align:center"><button id="modal-close-2" style="background:#3b82f6;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:.9rem">Закрыть</button></div>'+
+  modal.innerHTML =
+    '<button id="modal-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:640px;margin:0 auto">'+
+      '<h3 style="margin:0 0 10px">'+esc(c.question)+'</h3>'+
+      imgHtml+
+      '<h4 style="margin:14px 0 6px;color:#10b981">ПЛАН</h4>'+
+      '<pre style="white-space:pre-wrap;font-family:inherit;background:#f0fdf4;padding:12px;border-radius:6px;font-size:.9rem;margin:0">'+esc(c.plan)+'</pre>'+
+      '<h4 style="margin:14px 0 6px;color:#3b82f6">ОТВЕТ</h4>'+
+      '<div style="background:#f8fafc;padding:12px;border-radius:6px;font-size:.9rem;white-space:pre-wrap">'+esc(c.answer)+'</div>'+
+      '<div style="margin-top:20px;text-align:center"><button id="modal-close-2" style="background:#3b82f6;color:#fff;border:none;padding:14px 40px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600">Закрыть</button></div>'+
     '</div>';
   document.body.appendChild(modal);
-  // Закрытие по кнопкам
   document.getElementById("modal-close").onclick = function(){modal.remove();};
   document.getElementById("modal-close-2").onclick = function(){modal.remove();};
-  // Закрытие по клику на фон
+  // Закрытие по клику на тёмный фон
   modal.onclick = function(e){if(e.target===modal) modal.remove();};
+  // Прокрутка начинается с верха
+  modal.scrollTop = 0;
 };
 
 window.editCard = function(id){
