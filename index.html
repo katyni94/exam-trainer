@@ -17,6 +17,7 @@ nav button.active{background:#f59e0b}
 .btn.ghost:hover{background:#cbd5e1}
 .btn.danger{background:#ef4444}
 .btn.ok{background:#10b981}
+.btn.mini{padding:4px 8px;font-size:.72rem}
 main{padding:14px;max-width:960px;margin:0 auto}
 .tab{display:none}.tab.active{display:block}
 h2{margin-top:0;font-size:1.15rem}
@@ -28,6 +29,7 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .row .btn{flex:0 0 auto}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin:8px 0}
+.card.learned{background:#f0fdf4;border-color:#86efac}
 .card .meta{font-size:.75rem;color:#64748b;margin:4px 0}
 .card button{padding:5px 10px;margin-right:5px;margin-top:6px;font-size:.78rem}
 .group-header{margin:18px 0 6px;font-size:.85rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -45,6 +47,21 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
 .preview .a{font-size:.82rem;color:#475569;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:5px}
 .hint{font-size:.82rem;color:#64748b;margin-top:6px}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;background:#e2e8f0;color:#475569;margin-left:5px}
+.card-img{max-width:100%;border-radius:6px;margin:10px 0;display:block}
+.img-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;background:#dbeafe;color:#1e40af;margin-left:5px}
+.big-pbar{background:#e2e8f0;border-radius:8px;height:22px;overflow:hidden;margin:10px 0;position:relative}
+.big-pbar>div{background:linear-gradient(90deg,#10b981,#22c55e);height:100%;transition:.4s}
+.big-pbar>span{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;color:#0f172a}
+.sum-item{display:flex;gap:10px;align-items:center;padding:10px;background:#fff;border-radius:8px;margin:6px 0;border-left:4px solid #e2e8f0}
+.sum-item.full{border-color:#10b981;background:#f0fdf4}
+.sum-item.part{border-color:#f59e0b;background:#fffbeb}
+.sum-item.none{border-color:#e2e8f0}
+.sum-num{font-weight:700;color:#1e3a8a;min-width:28px;font-size:.95rem}
+.sum-body{flex:1}
+.sum-q{font-size:.88rem;margin:0}
+.sum-meta{font-size:.72rem;color:#64748b;margin-top:3px}
+.sum-status{font-size:1.4rem;min-width:32px;text-align:center}
+.sum-dup{opacity:.6;font-style:italic}
 </style>
 </head>
 <body>
@@ -54,12 +71,13 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
     <button data-tab="import" class="active">Импорт</button>
     <button data-tab="topics">Темы</button>
     <button data-tab="study">Учёба</button>
+    <button data-tab="summary">Сводка</button>
   </nav>
 </header>
 <main>
 <section id="import" class="tab active">
   <h2>Импорт</h2>
-  <p class="hint">Формат: «Тема 1.1. Название» … «План ответа:» … список. Можно несколько тем сразу.</p>
+  <p class="hint">Формат: «Тема 1.1. Название» … «План ответа:» … список. Картинка — строкой «Картинка: https://...».</p>
   <label>Текст</label>
   <textarea id="import-text" class="tall"></textarea>
   <div class="row">
@@ -73,12 +91,12 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
   </div>
 </section>
 <section id="topics" class="tab">
-  <h2>Темы <span class="pill" id="topics-count">0</span></h2>
+  <h2>Темы <span class="pill" id="topics-count">0</span> <span class="pill" id="learned-count" style="background:#d1fae5;color:#065f46">Изучено: 0</span></h2>
   <div class="row">
     <input type="text" id="search" placeholder="Поиск...">
-    <button class="btn ghost" id="export-btn">Экспорт JSON</button>
+    <button class="btn ghost" id="export-btn">Экспорт</button>
     <label class="btn ghost" style="margin:0;cursor:pointer;text-align:center">
-      Импорт JSON<input type="file" id="import-json" accept=".json" style="display:none">
+      Импорт<input type="file" id="import-json" accept=".json" style="display:none">
     </label>
     <button class="btn danger" id="clear-all">Удалить всё</button>
   </div>
@@ -88,15 +106,81 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
   <h2>Учёба</h2>
   <div id="study-area" class="study-box"></div>
 </section>
+<section id="summary" class="tab">
+  <h2>Сводка по вопросам экзамена</h2>
+  <div id="overall-progress"></div>
+  <div class="row" style="margin-bottom:10px">
+    <button class="btn ghost" id="filter-all">Все</button>
+    <button class="btn ghost" id="filter-learned">Изученные</button>
+    <button class="btn ghost" id="filter-left">Осталось</button>
+  </div>
+  <div id="summary-list"></div>
+</section>
 </main>
 <script>
 var cards = JSON.parse(localStorage.getItem("cards") || "[]");
-var preview = [];
-var studyQueue = [];
-var cur = null;
+var preview = [], studyQueue = [], cur = null;
+var summaryFilter = "all";
+
+// Сводка: вопрос экзамена → группа карточек
+var SUMMARY = [
+  {n:1, q:"Выбор ведущей машины при возведении насыпи", g:"1"},
+  {n:2, q:"Строительство покрытий из холодной асфальтобетонной смеси", g:"2"},
+  {n:3, q:"Контроль качества уплотнения грунтов", g:"3"},
+  {n:4, q:"Возведение насыпей на заболоченном участке", g:"4"},
+  {n:5, q:"Определение параметров потока при возведении земляного полотна", g:"5"},
+  {n:6, q:"Основания и покрытия из щебня и грунтов с органическим вяжущим (смешение на дороге)", g:"6"},
+  {n:7, q:"Теоретические основы уплотнения грунтов", g:"7"},
+  {n:8, q:"Уход за цементогрунтом", g:"8"},
+  {n:9, q:"Технология строительства цементобетонных покрытий", g:"9"},
+  {n:10, q:"(повтор вопроса 1)", g:"1", dup:1},
+  {n:11, q:"(повтор вопроса 2)", g:"2", dup:2},
+  {n:12, q:"(повтор вопроса 3)", g:"3", dup:3},
+  {n:13, q:"Оценка климатической характеристики района строительства", g:"13"},
+  {n:14, q:"Приемочный контроль при возведении земляного полотна", g:"14"},
+  {n:15, q:"Устройство оснований и покрытий способом пропитки и полупропитки", g:"15"},
+  {n:16, q:"Рекультивация сосредоточенного резерва", g:"16"},
+  {n:17, q:"(повтор вопроса 5)", g:"5", dup:5},
+  {n:18, q:"Подготовка поверхности земляного полотна к строительству дорожной одежды", g:"18"},
+  {n:19, q:"Технология строительства покрытий из горячих асфальтобетонных смесей", g:"19"},
+  {n:20, q:"Технология строительства сборных покрытий", g:"20"},
+  {n:21, q:"Технология строительства основания из рядового щебня", g:"21"},
+  {n:22, q:"Определение количества проходов катка при уплотнении грунтов", g:"22"},
+  {n:23, q:"Производственный контроль ведения работ", g:"28"},
+  {n:24, q:"(повтор вопроса 18)", g:"18", dup:18},
+  {n:25, q:"Возведение насыпей при пониженных температурах", g:"25"},
+  {n:26, q:"Основания и покрытия из грунтов с неорганическим вяжущим (смешение на дороге)", g:"26"},
+  {n:27, q:"(продолжение вопроса 26)", g:"26", dup:26},
+  {n:28, q:"Виды производственного контроля", g:"28"},
+  {n:29, q:"Влияние влажности грунта на его плотность", g:"29"},
+  {n:30, q:"Основания и покрытия из щебня и грунтов с органическим вяжущим (смесительная установка)", g:"30"},
+  {n:31, q:"(повтор вопроса 20)", g:"20", dup:20},
+  {n:32, q:"Возведение земляного полотна отрядом с ведущим экскаватором", g:"32"},
+  {n:33, q:"Технология строительства основания из фракционного щебня", g:"33"},
+  {n:34, q:"Классификация дорожно-строительных работ, типы поперечных профилей земляного полотна", g:"34"},
+  {n:35, q:"Устройство слоёв износа", g:"35"},
+  {n:36, q:"Возведение насыпей скреперами", g:"36"},
+  {n:37, q:"Классификация асфальтобетонов и асфальтобетонных смесей", g:"37"},
+  {n:38, q:"(повтор вопроса 32)", g:"32", dup:32},
+  {n:39, q:"(повтор вопроса 21)", g:"21", dup:21},
+  {n:40, q:"Устройство температурных швов в цементобетонном покрытии", g:"40"},
+  {n:41, q:"(повтор вопроса 7)", g:"7", dup:7},
+  {n:42, q:"(повтор вопроса 9)", g:"9", dup:9},
+  {n:43, q:"Строительство фундамента водопропускных труб", g:"43"},
+  {n:44, q:"Основания и покрытия из материалов и грунтов с неорганическим вяжущим (смесительная установка)", g:"44"},
+  {n:45, q:"(повтор вопроса 23)", g:"28", dup:23},
+  {n:46, q:"Подготовка и порядок разработки сосредоточенного резерва", g:"46"},
+  {n:47, q:"Технология строительства дренирующих слоёв дорожной одежды", g:"47"},
+  {n:48, q:"Устройство оснований по способу заклинки", g:"48"},
+  {n:49, q:"Функции и регламент операционного контроля", g:"49"},
+  {n:50, q:"(повтор вопроса 4)", g:"4", dup:4},
+  {n:51, q:"(повтор вопроса 5)", g:"5", dup:5},
+  {n:52, q:"(повтор вопроса 6)", g:"6", dup:6},
+  {n:53, q:"Технология строительства покрытий из щебёночно-мастичных асфальтобетонных смесей", g:"53"}
+];
 
 function $(id){return document.getElementById(id);}
-function save(){localStorage.setItem("cards", JSON.stringify(cards));}
+function save(){try{localStorage.setItem("cards", JSON.stringify(cards));}catch(e){alert("Хранилище переполнено!");}}
 function esc(t){var d=document.createElement("div");d.textContent=t||"";return d.innerHTML;}
 
 document.querySelectorAll("nav button").forEach(function(b){
@@ -107,6 +191,7 @@ document.querySelectorAll("nav button").forEach(function(b){
     $(b.dataset.tab).classList.add("active");
     if(b.dataset.tab==="topics") renderTopics();
     if(b.dataset.tab==="study") renderStudyStart();
+    if(b.dataset.tab==="summary") renderSummary();
   };
 });
 
@@ -119,7 +204,7 @@ function parseText(text){
     matches.push({index:m.index, num:m[1], question:m[2].trim()});
   }
   if(matches.length === 0){
-    out.push({num:"", group:"", question:"Без названия", answer:text, plan:autoPlan(text)});
+    out.push({num:"", group:"", question:"Без названия", answer:text, plan:autoPlan(text), image:""});
     return out;
   }
   for(var i=0;i<matches.length;i++){
@@ -127,13 +212,16 @@ function parseText(text){
     var end = (i+1 < matches.length) ? matches[i+1].index : text.length;
     var block = text.substring(start, end);
     var plan = "";
-    var pm = block.match(/План ответа\s*:?\s*\n([\s\S]*?)(?=\n(?:Мнемоника|Пример|Викторина|Тема \d)|$)/i);
+    var pm = block.match(/План ответа\s*:?\s*\n([\s\S]*?)(?=\n(?:Мнемоника|Пример|Викторина|Картинка|Тема \d)|$)/i);
     if(pm){
       plan = pm[1].split("\n").map(function(l){return l.replace(/^[\s\-•]+/,"").trim();}).filter(function(l){return l.length>3;}).map(function(p,i2){return /^\d/.test(p)?p:(i2+1)+". "+p;}).join("\n");
     }
     if(!plan) plan = autoPlan(block);
     var group = matches[i].num.split(".")[0];
-    out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan});
+    var img = "";
+    var imgM = block.match(/(?:Картинка|Изображение)\s*:?\s*(\S+)/i) || block.match(/!\[[^\]]*\]\(([^)]+)\)/) || block.match(/\[img:([^\]]+)\]/i);
+    if(imgM) img = imgM[1].trim();
+    out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan, image:img});
   }
   return out;
 }
@@ -158,7 +246,8 @@ $("parse-btn").onclick = function(){
   preview = parseText(raw);
   $("preview-count").textContent = preview.length;
   $("preview-list").innerHTML = preview.map(function(p,i){
-    return '<div class="preview"><div class="q">'+(i+1)+'. '+esc(p.question)+'</div><div class="a"><b>План:</b><br>'+esc(p.plan)+'</div></div>';
+    var imgTag = p.image ? ' <span class="img-badge">📷</span>' : '';
+    return '<div class="preview"><div class="q">'+(i+1)+'. '+esc(p.question)+imgTag+'</div><div class="a"><b>План:</b><br>'+esc(p.plan)+'</div></div>';
   }).join("");
   $("preview-block").style.display = "block";
 };
@@ -170,7 +259,7 @@ $("clear-import").onclick = function(){
 
 $("add-all").onclick = function(){
   preview.forEach(function(p){
-    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, due:Date.now(), reps:0, interval:0, ease:2.5});
+    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, image:p.image||"", learned:false, due:Date.now(), reps:0, interval:0, ease:2.5});
   });
   save();
   $("preview-block").style.display = "none";
@@ -181,7 +270,10 @@ $("add-all").onclick = function(){
 };
 
 function renderTopics(){
-  $("topics-count").textContent = cards.length;
+  var total = cards.length;
+  var learned = cards.filter(function(c){return c.learned;}).length;
+  $("topics-count").textContent = total;
+  $("learned-count").textContent = "Изучено: " + learned + "/" + total;
   if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем.</p>'; return;}
   var filter = ($("search").value || "").toLowerCase();
   var filtered = cards.filter(function(c){return c.question.toLowerCase().includes(filter);});
@@ -194,20 +286,54 @@ function renderTopics(){
   var html = "";
   Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
     var list = groups[g];
-    html += '<div class="group-header">Тема '+g+' · '+list.length+' частей</div>';
+    var gLearned = list.filter(function(c){return c.learned;}).length;
+    html += '<div class="group-header">Тема '+g+' · '+list.length+' частей · изучено '+gLearned+'/'+list.length+'</div>';
     html += list.map(function(c){
-      return '<div class="card" style="margin-left:14px"><strong>'+esc(c.question)+'</strong><div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div><button class="btn ghost" onclick="viewCard('+c.id+')">Показать</button><button class="btn danger" onclick="delCard('+c.id+')">Удалить</button></div>';
+      var cls = c.learned ? "card learned" : "card";
+      var imgTag = c.image ? ' <span class="img-badge">📷</span>' : '';
+      var btnLearn = c.learned
+        ? '<button class="btn ghost mini" onclick="toggleLearn('+c.id+')">Снять отметку</button>'
+        : '<button class="btn ok mini" onclick="toggleLearn('+c.id+')">✓ Изучено</button>';
+      return '<div class="'+cls+'" style="margin-left:14px"><strong>'+esc(c.question)+'</strong>'+imgTag+'<div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div>'+btnLearn+'<button class="btn ghost mini" onclick="viewCard('+c.id+')">Показать</button><button class="btn ghost mini" onclick="editCard('+c.id+')">Изменить</button><button class="btn danger mini" onclick="delCard('+c.id+')">Удалить</button></div>';
     }).join("");
   });
   $("topics-list").innerHTML = html;
 }
+
+window.toggleLearn = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  c.learned = !c.learned;
+  save(); renderTopics();
+};
 
 $("search").addEventListener("input", renderTopics);
 
 window.viewCard = function(id){
   var c = cards.filter(function(x){return x.id===id;})[0];
   if(!c) return;
-  alert("ВОПРОС:\n"+c.question+"\n\nПЛАН:\n"+c.plan+"\n\nОТВЕТ:\n"+c.answer.substring(0,1500));
+  var html = '<div style="font-family:sans-serif;max-width:600px">';
+  html += '<h3 style="margin:0 0 8px">ВОПРОС</h3>';
+  html += '<p style="margin:0 0 8px"><b>'+esc(c.question)+'</b></p>';
+  if(c.image) html += '<img src="'+esc(c.image)+'" style="max-width:100%;border-radius:6px;margin:8px 0">';
+  html += '<h4 style="margin:12px 0 4px">ПЛАН</h4>';
+  html += '<pre style="white-space:pre-wrap;font-family:inherit;background:#f8fafc;padding:10px;border-radius:6px;margin:0 0 8px">'+esc(c.plan)+'</pre>';
+  html += '<h4 style="margin:12px 0 4px">ОТВЕТ</h4>';
+  html += '<div style="max-height:200px;overflow:auto;background:#f8fafc;padding:10px;border-radius:6px;font-size:.9rem;white-space:pre-wrap">'+esc(c.answer.substring(0,2000))+'</div>';
+  html += '</div>';
+  var w = window.open("", "_blank", "width=650,height=700");
+  w.document.write(html); w.document.close();
+};
+
+window.editCard = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0];
+  if(!c) return;
+  var q = prompt("Вопрос:", c.question); if(q===null) return;
+  var p = prompt("План:", c.plan); if(p===null) return;
+  var a = prompt("Ответ:", c.answer); if(a===null) return;
+  var img = prompt("Картинка (URL):", c.image||""); if(img===null) return;
+  c.question = q.trim(); c.plan = p.trim(); c.answer = a.trim(); c.image = img.trim();
+  save(); renderTopics();
 };
 
 window.delCard = function(id){
@@ -217,14 +343,12 @@ window.delCard = function(id){
 };
 
 $("export-btn").onclick = function(){
-  if(!cards.length){alert("Нет тем для экспорта");return;}
-  var data = JSON.stringify(cards, null, 2);
-  var blob = new Blob([data], {type:"application/json"});
+  if(!cards.length){alert("Нет тем");return;}
+  var blob = new Blob([JSON.stringify(cards, null, 2)], {type:"application/json"});
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
   var d = new Date();
-  var name = "trener-" + d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + ".json";
-  a.href = url; a.download = name; a.click();
+  a.href = url; a.download = "trener-" + d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + ".json"; a.click();
   URL.revokeObjectURL(url);
 };
 
@@ -238,47 +362,53 @@ $("import-json").addEventListener("change", function(e){
       var added = 0, skipped = 0;
       data.forEach(function(d){
         if(!d.question || !d.answer){skipped++;return;}
-        var dup = cards.some(function(c){return c.question === d.question;});
-        if(dup){skipped++;return;}
+        if(cards.some(function(c){return c.question === d.question;})){skipped++;return;}
         cards.push({
-          id:Date.now()+Math.random(),
-          num:d.num||"", group:d.group||"",
+          id:Date.now()+Math.random(), num:d.num||"", group:d.group||"",
           question:d.question, answer:d.answer, plan:d.plan||autoPlan(d.answer),
+          image:d.image||"", learned:d.learned||false,
           due:d.due||Date.now(), reps:d.reps||0, interval:d.interval||0, ease:d.ease||2.5
         });
         added++;
       });
       save(); renderTopics();
       alert("Добавлено: "+added+"\nПропущено: "+skipped);
-    }catch(err){alert("Ошибка чтения файла: "+err.message);}
+    }catch(err){alert("Ошибка: "+err.message);}
     e.target.value = "";
   };
   r.readAsText(f, "UTF-8");
 });
 
 $("clear-all").onclick = function(){
-  if(!confirm("Удалить ВСЕ темы? Действие необратимо.")) return;
+  if(!confirm("Удалить ВСЕ темы?")) return;
   cards = []; save(); renderTopics();
 };
 
 function renderStudyStart(){
   var area = $("study-area");
   if(!cards.length){area.innerHTML = "<p>Сначала импортируйте темы.</p>"; return;}
-  area.innerHTML = '<p>Всего тем: '+cards.length+'</p><button class="btn" id="start">Начать</button>';
-  $("start").onclick = function(){studyQueue = cards.slice(); nextCard();};
+  var left = cards.filter(function(c){return !c.learned;}).length;
+  area.innerHTML = '<p>Всего тем: '+cards.length+'. Осталось изучить: '+left+'.</p><button class="btn" id="start-all">Все подряд</button> <button class="btn ghost" id="start-left">Только неизученные</button>';
+  $("start-all").onclick = function(){studyQueue = cards.slice(); nextCard();};
+  $("start-left").onclick = function(){studyQueue = cards.filter(function(c){return !c.learned;}); if(!studyQueue.length){alert("Все изучено!");return;} nextCard();};
 }
 
 function nextCard(){
   var area = $("study-area");
   if(!studyQueue.length){area.innerHTML = "<p>Готово!</p>"; return;}
   cur = studyQueue.shift();
-  area.innerHTML = '<h3>Вопрос</h3><p><strong>'+esc(cur.question)+'</strong></p><label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary style="cursor:pointer">Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div></div>';
+  var imgHtml = cur.image ? '<img class="card-img" src="'+esc(cur.image)+'">' : '';
+  var learnedTag = cur.learned ? ' <span class="pill" style="background:#d1fae5;color:#065f46">Изучено</span>' : '';
+  area.innerHTML = '<h3>Вопрос'+learnedTag+'</h3><p><strong>'+esc(cur.question)+'</strong></p>'+imgHtml+'<label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary style="cursor:pointer">Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div><div style="margin-top:10px"><button class="btn ghost mini" id="toggle-learn">'+(cur.learned?'Снять отметку изучено':'✓ Отметить изучено')+'</button></div></div>';
   $("reveal").onclick = function(){$("ans").style.display="block";$("reveal").style.display="none";};
+  $("toggle-learn").onclick = function(){cur.learned = !cur.learned; save(); nextCard();};
   document.querySelectorAll(".rating button").forEach(function(b){b.onclick=function(){rateCard(parseInt(b.dataset.q));};});
 }
 
 function rateCard(q){
   var now = Date.now();
+  // Оценка "Норм" или "Легко" → автоматически помечаем как изученное
+  if(q >= 2) cur.learned = true;
   if(q===0){cur.reps=0;cur.interval=0;cur.due=now+10*60*1000;}
   else{
     if(cur.reps===0) cur.interval = q===1?1:q===2?1:3;
@@ -288,6 +418,41 @@ function rateCard(q){
   }
   save(); nextCard();
 }
+
+/* ============ СВОДКА ============ */
+function renderSummary(){
+  var totalCards = cards.length;
+  var learnedCards = cards.filter(function(c){return c.learned;}).length;
+  var pct = totalCards ? Math.round(learnedCards/totalCards*100) : 0;
+  $("overall-progress").innerHTML = '<div class="big-pbar"><div style="width:'+pct+'%"></div><span>'+learnedCards+' из '+totalCards+' карточек изучено · '+pct+'%</span></div>';
+
+  var html = "";
+  SUMMARY.forEach(function(item){
+    var group = cards.filter(function(c){return c.group === item.g;});
+    var gTotal = group.length;
+    var gLearned = group.filter(function(c){return c.learned;}).length;
+    var status = "none", statusIcon = "○", cls = "sum-item none";
+    if(gTotal > 0 && gLearned === gTotal){status="full";statusIcon="✓";cls="sum-item full";}
+    else if(gLearned > 0){status="part";statusIcon="◐";cls="sum-item part";}
+
+    // Фильтр
+    if(summaryFilter === "learned" && status !== "full") return;
+    if(summaryFilter === "left" && status === "full") return;
+
+    var dupCls = item.dup ? " sum-dup" : "";
+    html += '<div class="'+cls+'">';
+    html += '<div class="sum-num">'+item.n+'.</div>';
+    html += '<div class="sum-body"><p class="sum-q'+dupCls+'">'+esc(item.q)+'</p>';
+    html += '<p class="sum-meta">Тема '+item.g+(gTotal?' · '+gLearned+'/'+gTotal+' частей':' · карточек нет')+'</p></div>';
+    html += '<div class="sum-status">'+statusIcon+'</div>';
+    html += '</div>';
+  });
+  $("summary-list").innerHTML = html || '<p class="hint">Ничего не найдено.</p>';
+}
+
+$("filter-all").onclick = function(){summaryFilter="all"; renderSummary();};
+$("filter-learned").onclick = function(){summaryFilter="learned"; renderSummary();};
+$("filter-left").onclick = function(){summaryFilter="left"; renderSummary();};
 
 renderTopics();
 </script>
