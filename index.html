@@ -375,7 +375,7 @@ $("import-json").addEventListener("change", function(e){
       var added = 0, skipped = 0;
       data.forEach(function(d){
         if(!d.question || !d.answer){skipped++;return;}
-        if(cards.some(function(c){return c.question === d.question;})){skipped++;return;}
+        if(cards.some(function(c){return c.question === d.question && (c.num||"") === (d.num||"");})){skipped++;return;}
         cards.push({
           id:Date.now()+Math.random(), num:d.num||"", group:d.group||"",
           question:d.question, answer:d.answer, plan:d.plan||autoPlan(d.answer),
