@@ -2,28 +2,35 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тренер</title>
 <style>
-body{font-family:sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
-header{background:#1e3a8a;color:#fff;padding:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-header h1{margin:0;font-size:1rem;flex:1}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
+header{background:#1e3a8a;color:#fff;padding:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:1rem;flex:1;min-width:100px}
 nav{display:flex;gap:4px;flex-wrap:wrap}
 nav button,.btn{background:#3b82f6;color:#fff;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.85rem}
 nav button:hover,.btn:hover{background:#2563eb}
 nav button.active{background:#f59e0b}
 .btn.ghost{background:#e2e8f0;color:#0f172a}
+.btn.ghost:hover{background:#cbd5e1}
 .btn.danger{background:#ef4444}
-main{padding:18px;max-width:960px;margin:0 auto}
+.btn.ok{background:#10b981}
+main{padding:14px;max-width:960px;margin:0 auto}
 .tab{display:none}.tab.active{display:block}
-h2{margin-top:0}
+h2{margin-top:0;font-size:1.15rem}
+h3{margin:12px 0 6px;font-size:1rem}
 label{display:block;margin:10px 0 4px;font-weight:600;font-size:.88rem}
 textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;font-size:.92rem}
 textarea.tall{min-height:220px;font-family:monospace;font-size:.82rem}
+input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;font-size:.92rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .row .btn{flex:0 0 auto}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin:8px 0}
 .card .meta{font-size:.75rem;color:#64748b;margin:4px 0}
 .card button{padding:5px 10px;margin-right:5px;margin-top:6px;font-size:.78rem}
+.group-header{margin:18px 0 6px;font-size:.85rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .study-box{background:#fff;border-radius:10px;padding:18px}
 .answer{background:#f8fafc;border-left:4px solid #3b82f6;padding:12px;border-radius:6px;margin:10px 0;white-space:pre-wrap;font-size:.92rem}
 .answer.plan{border-color:#10b981}
@@ -52,7 +59,7 @@ textarea.tall{min-height:220px;font-family:monospace;font-size:.82rem}
 <main>
 <section id="import" class="tab active">
   <h2>Импорт</h2>
-  <p class="hint">Вставь текст в формате:<br>Тема 1. Название<br>...[текст]...<br>План ответа:<br>1. ...<br>2. ...</p>
+  <p class="hint">Формат: «Тема 1.1. Название» … «План ответа:» … список. Можно несколько тем сразу.</p>
   <label>Текст</label>
   <textarea id="import-text" class="tall"></textarea>
   <div class="row">
@@ -62,11 +69,19 @@ textarea.tall{min-height:220px;font-family:monospace;font-size:.82rem}
   <div id="preview-block" style="display:none;margin-top:16px">
     <h3>Предпросмотр <span class="pill" id="preview-count">0</span></h3>
     <div id="preview-list"></div>
-    <button class="btn" id="add-all">Добавить все</button>
+    <button class="btn ok" id="add-all">Добавить все</button>
   </div>
 </section>
 <section id="topics" class="tab">
   <h2>Темы <span class="pill" id="topics-count">0</span></h2>
+  <div class="row">
+    <input type="text" id="search" placeholder="Поиск...">
+    <button class="btn ghost" id="export-btn">Экспорт JSON</button>
+    <label class="btn ghost" style="margin:0;cursor:pointer;text-align:center">
+      Импорт JSON<input type="file" id="import-json" accept=".json" style="display:none">
+    </label>
+    <button class="btn danger" id="clear-all">Удалить всё</button>
+  </div>
   <div id="topics-list"></div>
 </section>
 <section id="study" class="tab">
@@ -118,7 +133,7 @@ function parseText(text){
     }
     if(!plan) plan = autoPlan(block);
     var group = matches[i].num.split(".")[0];
-out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan});
+    out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan});
   }
   return out;
 }
@@ -168,8 +183,10 @@ $("add-all").onclick = function(){
 function renderTopics(){
   $("topics-count").textContent = cards.length;
   if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем.</p>'; return;}
+  var filter = ($("search").value || "").toLowerCase();
+  var filtered = cards.filter(function(c){return c.question.toLowerCase().includes(filter);});
   var groups = {};
-  cards.forEach(function(c){
+  filtered.forEach(function(c){
     var g = c.group || "—";
     if(!groups[g]) groups[g] = [];
     groups[g].push(c);
@@ -177,13 +194,15 @@ function renderTopics(){
   var html = "";
   Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
     var list = groups[g];
-    html += '<div style="margin:18px 0 6px;font-size:.85rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Тема '+g+' · '+list.length+' частей</div>';
+    html += '<div class="group-header">Тема '+g+' · '+list.length+' частей</div>';
     html += list.map(function(c){
       return '<div class="card" style="margin-left:14px"><strong>'+esc(c.question)+'</strong><div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div><button class="btn ghost" onclick="viewCard('+c.id+')">Показать</button><button class="btn danger" onclick="delCard('+c.id+')">Удалить</button></div>';
     }).join("");
   });
   $("topics-list").innerHTML = html;
 }
+
+$("search").addEventListener("input", renderTopics);
 
 window.viewCard = function(id){
   var c = cards.filter(function(x){return x.id===id;})[0];
@@ -197,6 +216,51 @@ window.delCard = function(id){
   save(); renderTopics();
 };
 
+$("export-btn").onclick = function(){
+  if(!cards.length){alert("Нет тем для экспорта");return;}
+  var data = JSON.stringify(cards, null, 2);
+  var blob = new Blob([data], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  var d = new Date();
+  var name = "trener-" + d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + ".json";
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+};
+
+$("import-json").addEventListener("change", function(e){
+  var f = e.target.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(ev){
+    try{
+      var data = JSON.parse(ev.target.result);
+      if(!Array.isArray(data)) throw new Error("Не массив");
+      var added = 0, skipped = 0;
+      data.forEach(function(d){
+        if(!d.question || !d.answer){skipped++;return;}
+        var dup = cards.some(function(c){return c.question === d.question;});
+        if(dup){skipped++;return;}
+        cards.push({
+          id:Date.now()+Math.random(),
+          num:d.num||"", group:d.group||"",
+          question:d.question, answer:d.answer, plan:d.plan||autoPlan(d.answer),
+          due:d.due||Date.now(), reps:d.reps||0, interval:d.interval||0, ease:d.ease||2.5
+        });
+        added++;
+      });
+      save(); renderTopics();
+      alert("Добавлено: "+added+"\nПропущено: "+skipped);
+    }catch(err){alert("Ошибка чтения файла: "+err.message);}
+    e.target.value = "";
+  };
+  r.readAsText(f, "UTF-8");
+});
+
+$("clear-all").onclick = function(){
+  if(!confirm("Удалить ВСЕ темы? Действие необратимо.")) return;
+  cards = []; save(); renderTopics();
+};
+
 function renderStudyStart(){
   var area = $("study-area");
   if(!cards.length){area.innerHTML = "<p>Сначала импортируйте темы.</p>"; return;}
@@ -208,7 +272,7 @@ function nextCard(){
   var area = $("study-area");
   if(!studyQueue.length){area.innerHTML = "<p>Готово!</p>"; return;}
   cur = studyQueue.shift();
-  area.innerHTML = '<h3>Вопрос</h3><p><strong>'+esc(cur.question)+'</strong></p><label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary>Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div></div>';
+  area.innerHTML = '<h3>Вопрос</h3><p><strong>'+esc(cur.question)+'</strong></p><label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary style="cursor:pointer">Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div></div>';
   $("reveal").onclick = function(){$("ans").style.display="block";$("reveal").style.display="none";};
   document.querySelectorAll(".rating button").forEach(function(b){b.onclick=function(){rateCard(parseInt(b.dataset.q));};});
 }
