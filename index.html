@@ -99,6 +99,10 @@ body.dark .topic-answer{background:#0f172a}
 .img-row{display:flex;gap:6px;margin-top:6px;align-items:center}
 .img-row input{flex:1}
 .img-row button{flex:0 0 auto;padding:6px 10px}
+.q-row{display:flex;gap:6px;margin-top:6px;align-items:center}
+.q-row input.q-num{width:60px;flex:0 0 auto;text-align:center}
+.q-row input.q-title{flex:1}
+.q-row button{flex:0 0 auto;padding:6px 10px}
 </style>
 </head>
 <body>
@@ -122,7 +126,7 @@ body.dark .topic-answer{background:#0f172a}
 <main>
 <section id="import" class="tab active">
   <h2>Импорт</h2>
-  <p class="hint">Формат: «Тема 1.1. Название» … «План ответа:» … список. Картинки — строками «Картинка: https://...» (можно несколько).</p>
+  <p class="hint">Формат: «Тема 1.1. Название» … «План ответа:» … список. Картинки — строками «Картинка: https://...». Если вопрос с таким номером ещё не создан — приложение предложит создать его автоматически.</p>
   <label>Текст</label>
   <textarea id="import-text" class="tall"></textarea>
   <div class="row">
@@ -140,8 +144,10 @@ body.dark .topic-answer{background:#0f172a}
   <h2>Темы <span class="pill" id="topics-count">0</span> <span class="pill" id="learned-count" style="background:#d1fae5;color:#065f46">Изучено: 0</span></h2>
   <div class="row">
     <input type="text" id="search" placeholder="Поиск...">
-    <button class="btn ghost" id="expand-all">Развернуть все</button>
-    <button class="btn ghost" id="collapse-all">Свернуть все</button>
+    <button class="btn" id="question-add">+ Вопрос</button>
+    <button class="btn ghost" id="questions-manage">⚙ Вопросы</button>
+    <button class="btn ghost" id="expand-all">Развернуть</button>
+    <button class="btn ghost" id="collapse-all">Свернуть</button>
     <button class="btn ghost" id="print-btn">🖨 PDF</button>
     <button class="btn ghost" id="export-btn">Экспорт</button>
     <label class="btn ghost" style="margin:0;cursor:pointer;text-align:center">
@@ -158,7 +164,7 @@ body.dark .topic-answer{background:#0f172a}
 </section>
 
 <section id="summary" class="tab">
-  <h2>Сводка по вопросам экзамена</h2>
+  <h2>Сводка по вопросам</h2>
   <div id="overall-progress"></div>
   <div class="row" style="margin-bottom:10px">
     <button class="btn ghost" id="filter-all">Все</button>
@@ -172,40 +178,68 @@ body.dark .topic-answer{background:#0f172a}
 <script>
 /* ============ ПРЕДМЕТЫ ============ */
 var DEFAULT_SUBJECT = "Строительство транспортных сооружений";
-var subjects = JSON.parse(localStorage.getItem("subjects") || "null");
-var currentSubject = localStorage.getItem("currentSubject") || DEFAULT_SUBJECT;
 
-// Миграция: старый формат — просто массив cards
+// Первоначальные вопросы для старого предмета (для миграции)
+var LEGACY_QUESTIONS = {
+  "1":"Выбор ведущей машины при возведении насыпи","2":"Строительство покрытий из холодной асфальтобетонной смеси","3":"Контроль качества уплотнения грунтов","4":"Возведение насыпей на заболоченном участке","5":"Определение параметров потока при возведении земляного полотна","6":"Устройство оснований и покрытий из щебня и грунтов, укреплённых органическими вяжущими (смешение на дороге)","7":"Теоретические основы уплотнения грунтов","8":"Уход за цементогрунтом","9":"Технология строительства цементобетонных покрытий","13":"Оценка климатической характеристики района строительства","14":"Приемочный контроль при возведении земляного полотна","15":"Устройство оснований и покрытий способом пропитки и полупропитки","16":"Рекультивация сосредоточенного резерва","18":"Подготовка поверхности земляного полотна к строительству дорожной одежды","19":"Технология строительства покрытий из горячих асфальтобетонных смесей","20":"Технология строительства сборных покрытий","21":"Технология строительства основания из рядового щебня","22":"Определение количества проходов катка при уплотнении грунтов","25":"Возведение насыпей при пониженных температурах","26":"Устройство оснований и покрытий из грунтов, укреплённых неорганическими вяжущими (смешение на дороге)","28":"Производственный контроль ведения работ. Виды контроля","29":"Влияние влажности грунта на его плотность","30":"Устройство оснований из щебня и грунтов, обработанных органическими вяжущими в смесительной установке","32":"Возведение земляного полотна отрядом с ведущим экскаватором","33":"Технология строительства основания из фракционного щебня","34":"Классификация дорожно-строительных работ, типы поперечных профилей земляного полотна","35":"Устройство слоёв износа","36":"Возведение насыпей скреперами","37":"Классификация асфальтобетонов и асфальтобетонных смесей","40":"Устройство температурных швов в цементобетонном покрытии","43":"Строительство фундамента водопропускных труб","44":"Устройство оснований из материалов и грунтов, обработанных неорганическим вяжущим в смесительной установке","46":"Подготовка и порядок разработки сосредоточенного резерва","47":"Технология строительства дренирующих слоёв дорожной одежды","48":"Устройство оснований по способу заклинки","49":"Функции и регламент операционного контроля","53":"Технология строительства покрытий из щебёночно-мастичных асфальтобетонных смесей"
+};
+
+// subjects: { "Название": { questions: {...}, cards: [...] } }
+var subjects = JSON.parse(localStorage.getItem("subjects_v2") || "null");
+var currentSubject = localStorage.getItem("currentSubject_v2") || DEFAULT_SUBJECT;
+
+// Миграция со старого формата (subjects_v1 / cards)
 if(!subjects){
+  var oldSubjects = JSON.parse(localStorage.getItem("subjects") || "null");
   var oldCards = JSON.parse(localStorage.getItem("cards") || "[]");
   subjects = {};
-  subjects[DEFAULT_SUBJECT] = oldCards;
-  localStorage.setItem("subjects", JSON.stringify(subjects));
-  localStorage.setItem("currentSubject", DEFAULT_SUBJECT);
-  localStorage.removeItem("cards"); // убираем старый ключ
+
+  if(oldSubjects){
+    // Из v1: subjects = { "Название": [карточки] }
+    Object.keys(oldSubjects).forEach(function(name){
+      subjects[name] = {
+        questions: (name === DEFAULT_SUBJECT) ? JSON.parse(JSON.stringify(LEGACY_QUESTIONS)) : {},
+        cards: oldSubjects[name] || []
+      };
+    });
+  } else if(oldCards.length){
+    // Совсем старый формат: просто cards
+    subjects[DEFAULT_SUBJECT] = {
+      questions: JSON.parse(JSON.stringify(LEGACY_QUESTIONS)),
+      cards: oldCards
+    };
+  } else {
+    subjects[DEFAULT_SUBJECT] = {
+      questions: JSON.parse(JSON.stringify(LEGACY_QUESTIONS)),
+      cards: []
+    };
+  }
+  localStorage.setItem("subjects_v2", JSON.stringify(subjects));
+  localStorage.setItem("currentSubject_v2", currentSubject);
 }
 
 if(!subjects[currentSubject]){
   currentSubject = Object.keys(subjects)[0] || DEFAULT_SUBJECT;
-  if(!subjects[currentSubject]) subjects[currentSubject] = [];
+  if(!subjects[currentSubject]){
+    subjects[currentSubject] = { questions: {}, cards: [] };
+  }
 }
 
-var cards = subjects[currentSubject] || [];
+function getCards(){ return subjects[currentSubject].cards; }
+function setCards(arr){ subjects[currentSubject].cards = arr; }
+function getQuestions(){ return subjects[currentSubject].questions || {}; }
 
 function save(){
-  subjects[currentSubject] = cards;
   try{
-    localStorage.setItem("subjects", JSON.stringify(subjects));
-    localStorage.setItem("currentSubject", currentSubject);
+    localStorage.setItem("subjects_v2", JSON.stringify(subjects));
+    localStorage.setItem("currentSubject_v2", currentSubject);
   }catch(e){alert("Хранилище переполнено!");}
 }
 
 function switchSubject(name){
-  subjects[currentSubject] = cards;
-  localStorage.setItem("subjects", JSON.stringify(subjects));
+  save();
   currentSubject = name;
-  cards = subjects[name] || [];
-  localStorage.setItem("currentSubject", currentSubject);
+  localStorage.setItem("currentSubject_v2", currentSubject);
   renderSubjectSelect();
   renderTopics();
   renderStudyStart();
@@ -226,13 +260,12 @@ $("subject-add").onclick = function(){
   if(!name || !name.trim()) return;
   name = name.trim();
   if(subjects[name]){alert("Такой предмет уже есть."); return;}
-  subjects[name] = [];
+  subjects[name] = { questions: {}, cards: [] };
   currentSubject = name;
-  cards = [];
   save();
   renderSubjectSelect();
   renderTopics(); renderStudyStart(); renderSummary();
-  alert("Создан предмет: " + name);
+  alert("Создан предмет: " + name + "\n\nДобавь вопросы кнопкой «+ Вопрос» во вкладке «Темы», потом импортируй карточки.");
 };
 
 $("subject-manage").onclick = function(){
@@ -245,19 +278,16 @@ $("subject-manage").onclick = function(){
     subjects[newName] = subjects[currentSubject];
     delete subjects[currentSubject];
     currentSubject = newName;
-    save();
-    renderSubjectSelect();
+    save(); renderSubjectSelect();
     alert("Переименовано в: " + newName);
   } else if(action === "2"){
     var names = Object.keys(subjects);
     if(names.length <= 1){alert("Нельзя удалить единственный предмет."); return;}
-    if(!confirm("Удалить предмет «"+currentSubject+"» вместе со всеми "+(cards.length)+" карточками? Необратимо.")) return;
+    if(!confirm("Удалить предмет «"+currentSubject+"» вместе со всеми карточками и вопросами? Необратимо.")) return;
     if(!confirm("Точно удалить? Второе подтверждение.")) return;
     delete subjects[currentSubject];
     currentSubject = Object.keys(subjects)[0];
-    cards = subjects[currentSubject] || [];
-    save();
-    renderSubjectSelect();
+    save(); renderSubjectSelect();
     renderTopics(); renderStudyStart(); renderSummary();
     alert("Удалено.");
   }
@@ -270,14 +300,9 @@ var curTopic = null;
 var summaryFilter = "all";
 var collapsedGroups = {};
 
-var QUESTION_TITLES = {
-  "1":"Выбор ведущей машины при возведении насыпи","2":"Строительство покрытий из холодной асфальтобетонной смеси","3":"Контроль качества уплотнения грунтов","4":"Возведение насыпей на заболоченном участке","5":"Определение параметров потока при возведении земляного полотна","6":"Устройство оснований и покрытий из щебня и грунтов, укреплённых органическими вяжущими (смешение на дороге)","7":"Теоретические основы уплотнения грунтов","8":"Уход за цементогрунтом","9":"Технология строительства цементобетонных покрытий","13":"Оценка климатической характеристики района строительства","14":"Приемочный контроль при возведении земляного полотна","15":"Устройство оснований и покрытий способом пропитки и полупропитки","16":"Рекультивация сосредоточенного резерва","18":"Подготовка поверхности земляного полотна к строительству дорожной одежды","19":"Технология строительства покрытий из горячих асфальтобетонных смесей","20":"Технология строительства сборных покрытий","21":"Технология строительства основания из рядового щебня","22":"Определение количества проходов катка при уплотнении грунтов","25":"Возведение насыпей при пониженных температурах","26":"Устройство оснований и покрытий из грунтов, укреплённых неорганическими вяжущими (смешение на дороге)","28":"Производственный контроль ведения работ. Виды контроля","29":"Влияние влажности грунта на его плотность","30":"Устройство оснований из щебня и грунтов, обработанных органическими вяжущими в смесительной установке","32":"Возведение земляного полотна отрядом с ведущим экскаватором","33":"Технология строительства основания из фракционного щебня","34":"Классификация дорожно-строительных работ, типы поперечных профилей земляного полотна","35":"Устройство слоёв износа","36":"Возведение насыпей скреперами","37":"Классификация асфальтобетонов и асфальтобетонных смесей","40":"Устройство температурных швов в цементобетонном покрытии","43":"Строительство фундамента водопропускных труб","44":"Устройство оснований из материалов и грунтов, обработанных неорганическим вяжущим в смесительной установке","46":"Подготовка и порядок разработки сосредоточенного резерва","47":"Технология строительства дренирующих слоёв дорожной одежды","48":"Устройство оснований по способу заклинки","49":"Функции и регламент операционного контроля","53":"Технология строительства покрытий из щебёночно-мастичных асфальтобетонных смесей"
-};
-
 function $(id){return document.getElementById(id);}
 function esc(t){var d=document.createElement("div");d.textContent=t||"";return d.innerHTML;}
 
-// Тёмная тема
 if(localStorage.getItem("dark")==="1"){ document.body.classList.add("dark"); $("dark-btn").textContent="☀"; }
 $("dark-btn").onclick = function(){
   document.body.classList.toggle("dark");
@@ -298,6 +323,74 @@ document.querySelectorAll("nav button").forEach(function(b){
   };
 });
 
+/* ============ ВОПРОСЫ ============ */
+$("question-add").onclick = function(){
+  var num = prompt("Номер вопроса (например, 1 или 5.1):", "");
+  if(!num || !num.trim()) return;
+  num = num.trim();
+  var qs = getQuestions();
+  if(qs[num]){alert("Вопрос с таким номером уже есть."); return;}
+  var title = prompt("Заголовок вопроса:", "");
+  if(!title || !title.trim()) return;
+  qs[num] = title.trim();
+  save(); renderTopics(); renderSummary();
+};
+
+$("questions-manage").onclick = function(){
+  var qs = getQuestions();
+  var nums = Object.keys(qs).sort(function(a,b){
+    var na = parseFloat(a), nb = parseFloat(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  });
+  if(!nums.length){
+    alert("В этом предмете пока нет вопросов.\n\nНажми «+ Вопрос», чтобы добавить.");
+    return;
+  }
+  var old = document.getElementById("modal-questions"); if(old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "modal-questions";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.9);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
+  var rows = nums.map(function(n){
+    return '<div class="q-row" data-num="'+esc(n)+'"><input class="q-num" value="'+esc(n)+'" readonly><input class="q-title" value="'+esc(qs[n])+'"><button class="btn danger" type="button" onclick="this.parentNode.remove()">✕</button></div>';
+  }).join('');
+  modal.innerHTML =
+    '<button id="q-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:720px;margin:0 auto;color:#0f172a">'+
+      '<h3 style="margin:0 0 10px">Вопросы предмета: '+esc(currentSubject)+'</h3>'+
+      '<p class="hint" style="margin:0 0 10px">Редактируй заголовки. Удаляй ненужные. Сохрани изменения внизу.</p>'+
+      '<div id="q-list">'+rows+'</div>'+
+      '<button class="btn ghost mini" id="q-add" type="button" style="margin-top:10px">+ Добавить вопрос</button>'+
+      '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button id="q-save" style="background:#10b981;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600">Сохранить</button>'+
+        '<button id="q-cancel" style="background:#e2e8f0;color:#0f172a;border:none;padding:12px 24px;border-radius:8px;cursor:pointer">Отмена</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+
+  document.getElementById("q-add").onclick = function(){
+    var div = document.createElement("div");
+    div.className = "q-row";
+    div.innerHTML = '<input class="q-num" placeholder="№"><input class="q-title" placeholder="Заголовок вопроса"><button class="btn danger" type="button" onclick="this.parentNode.remove()">✕</button>';
+    document.getElementById("q-list").appendChild(div);
+  };
+
+  document.getElementById("q-save").onclick = function(){
+    var newQs = {};
+    document.querySelectorAll("#q-list .q-row").forEach(function(row){
+      var n = row.querySelector(".q-num").value.trim();
+      var t = row.querySelector(".q-title").value.trim();
+      if(n && t) newQs[n] = t;
+    });
+    subjects[currentSubject].questions = newQs;
+    save(); modal.remove(); renderTopics(); renderSummary();
+  };
+  document.getElementById("q-cancel").onclick = function(){modal.remove();};
+  document.getElementById("q-close").onclick = function(){modal.remove();};
+  modal.onclick = function(e){if(e.target===modal) modal.remove();};
+};
+
+/* ============ ПАРСЕР ============ */
 function parseText(text){
   var out = [];
   var re = /^Тема\s+([\d.]+)[.:]?\s*(.+)$/gmi;
@@ -318,17 +411,12 @@ function parseText(text){
     }
     if(!plan) plan = autoPlan(block);
     var group = matches[i].num.split(".")[0];
-
-    // Несколько картинок — все совпадения "Картинка: URL" или markdown
     var images = [];
     var imgRe = /(?:Картинка|Изображение)\s*:?\s*(\S+)/gi;
     var im;
     while((im = imgRe.exec(block)) !== null) images.push(im[1].trim());
     var mdRe = /!\[[^\]]*\]\(([^)]+)\)/g;
     while((im = mdRe.exec(block)) !== null) images.push(im[1].trim());
-    var tagRe = /\[img:([^\]]+)\]/gi;
-    while((im = tagRe.exec(block)) !== null) images.push(im[1].trim());
-
     out.push({num:matches[i].num, group:group, question:matches[i].question, answer:block, plan:plan, images:images});
   }
   return out;
@@ -352,38 +440,61 @@ $("parse-btn").onclick = function(){
   var raw = $("import-text").value;
   if(!raw.trim()) return;
   preview = parseText(raw);
+  // Определяем новые группы, которых ещё нет среди вопросов
+  var qs = getQuestions();
+  var newGroups = {};
+  preview.forEach(function(p){
+    if(p.group && !qs[p.group] && !newGroups[p.group]){
+      newGroups[p.group] = p.question;
+    }
+  });
+  // Показываем уведомление о новых группах
+  var newG = Object.keys(newGroups);
+  if(newG.length){
+    var msg = "Найдены новые вопросы:\n\n" + newG.map(function(g){return "• " + g + ". " + newGroups[g];}).join("\n") + "\n\nСоздать их автоматически?";
+    if(confirm(msg)){
+      newG.forEach(function(g){ qs[g] = newGroups[g]; });
+      save();
+    }
+  }
   $("preview-count").textContent = preview.length;
   $("preview-list").innerHTML = preview.map(function(p,i){
     var imgTag = (p.images && p.images.length) ? ' <span class="img-badge">📷 ' + p.images.length + '</span>' : '';
     return '<div class="preview"><div class="q">'+(i+1)+'. '+esc(p.question)+imgTag+'</div><div class="a"><b>План:</b><br>'+esc(p.plan)+'</div></div>';
   }).join("");
   $("preview-block").style.display = "block";
+  renderTopics(); renderSummary();
 };
 
 $("clear-import").onclick = function(){ $("import-text").value = ""; $("preview-block").style.display = "none"; };
 
 $("add-all").onclick = function(){
+  var arr = getCards();
   preview.forEach(function(p){
-    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, images:p.images||[], note:"", favorite:false, postponedUntil:0, learned:false, due:Date.now(), reps:0, interval:0, ease:2.5});
+    arr.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, images:p.images||[], note:"", favorite:false, postponedUntil:0, learned:false, due:Date.now(), reps:0, interval:0, ease:2.5});
   });
+  setCards(arr);
   save();
   $("preview-block").style.display = "none";
   $("import-text").value = "";
   alert("Добавлено: " + preview.length);
   preview = [];
-  renderTopics();
+  renderTopics(); renderSummary();
 };
 
+/* ============ ТЕМЫ ============ */
 function renderTopics(){
+  var cards = getCards();
+  var qs = getQuestions();
   var total = cards.length;
   var learned = cards.filter(function(c){return c.learned;}).length;
   $("topics-count").textContent = total;
   $("learned-count").textContent = "Изучено: " + learned + "/" + total;
-  if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем в этом предмете.</p>'; return;}
+  if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем. Создай вопросы и импортируй карточки.</p>'; return;}
   var filter = ($("search").value || "").toLowerCase();
   var filtered = cards.filter(function(c){
     if(!filter) return true;
-    var gt = QUESTION_TITLES[c.group] || "";
+    var gt = qs[c.group] || "";
     return c.question.toLowerCase().includes(filter) || gt.toLowerCase().includes(filter);
   });
   var groups = {};
@@ -393,12 +504,16 @@ function renderTopics(){
     groups[g].push(c);
   });
   var html = "";
-  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
+  Object.keys(groups).sort(function(a,b){
+    var na = parseFloat(a), nb = parseFloat(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  }).forEach(function(g){
     var list = groups[g];
     var gLearned = list.filter(function(c){return c.learned;}).length;
     var gTotal = list.length;
     var isCollapsed = collapsedGroups[g];
-    var title = QUESTION_TITLES[g] || ("Тема " + g);
+    var title = qs[g] || (list[0] && list[0].question) || ("Тема " + g);
     html += '<div class="group-block">';
     html += '<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">';
     html += '<div style="flex:1;min-width:200px">';
@@ -437,6 +552,7 @@ function renderTopics(){
 window.toggleGroup = function(g){ collapsedGroups[g] = !collapsedGroups[g]; renderTopics(); };
 $("expand-all").onclick = function(){ collapsedGroups = {}; renderTopics(); };
 $("collapse-all").onclick = function(){
+  var cards = getCards();
   var groups = {};
   cards.forEach(function(c){ groups[c.group || "—"] = true; });
   Object.keys(groups).forEach(function(g){ collapsedGroups[g] = true; });
@@ -444,10 +560,12 @@ $("collapse-all").onclick = function(){
 };
 
 window.toggleLearn = function(id){
+  var cards = getCards();
   var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
   c.learned = !c.learned; save(); renderTopics();
 };
 window.toggleFav = function(id){
+  var cards = getCards();
   var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
   c.favorite = !c.favorite; save(); renderTopics();
 };
@@ -455,8 +573,10 @@ window.toggleFav = function(id){
 $("search").addEventListener("input", renderTopics);
 
 window.showWholeTopic = function(g){
+  var cards = getCards();
+  var qs = getQuestions();
   var gCards = cards.filter(function(c){return c.group === g;});
-  var title = QUESTION_TITLES[g] || ("Тема " + g);
+  var title = qs[g] || ("Тема " + g);
   var old = document.getElementById("modal-topic"); if(old) old.remove();
   var modal = document.createElement("div");
   modal.id = "modal-topic";
@@ -483,13 +603,19 @@ window.showWholeTopic = function(g){
 };
 
 $("print-btn").onclick = function(){
+  var cards = getCards();
+  var qs = getQuestions();
   if(!cards.length){alert("Нет тем");return;}
   var groups = {};
   cards.forEach(function(c){ var g = c.group || "—"; if(!groups[g]) groups[g]=[]; groups[g].push(c); });
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(currentSubject)+'</title><style>body{font-family:Georgia,serif;max-width:800px;margin:20px auto;padding:20px;color:#111;line-height:1.5}h1{color:#1e3a8a;border-bottom:2px solid #1e3a8a;padding-bottom:6px;margin-top:30px}h3{color:#333;margin-top:16px}pre{white-space:pre-wrap;font-family:inherit;background:#f5f5f5;padding:8px;border-radius:4px;font-size:.9em}.note{background:#fffbe6;border-left:3px solid #f59e0b;padding:6px;margin-top:8px;font-size:.9em}.part{margin:14px 0;page-break-inside:avoid}@media print{h1{page-break-before:always}h1:first-of-type{page-break-before:auto}}</style></head><body>';
   html += '<h1 style="text-align:center">'+esc(currentSubject)+'</h1><p style="text-align:center;color:#666">Дата: ' + new Date().toLocaleDateString('ru') + ' · Карточек: ' + cards.length + '</p>';
-  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
-    html += '<h1>Вопрос '+g+'. '+esc(QUESTION_TITLES[g] || ("Тема " + g))+'</h1>';
+  Object.keys(groups).sort(function(a,b){
+    var na = parseFloat(a), nb = parseFloat(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  }).forEach(function(g){
+    html += '<h1>Вопрос '+g+'. '+esc(qs[g] || ("Тема " + g))+'</h1>';
     groups[g].forEach(function(c){
       html += '<div class="part"><h3>'+esc(c.question)+'</h3>';
       if(c.plan) html += '<pre><b>План:</b>\n'+esc(c.plan)+'</pre>';
@@ -504,7 +630,9 @@ $("print-btn").onclick = function(){
   setTimeout(function(){ w.print(); }, 500);
 };
 
+/* ============ РЕДАКТИРОВАНИЕ КАРТОЧКИ ============ */
 window.editCard = function(id){
+  var cards = getCards();
   var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
   if(!c.images) c.images = [];
   var old = document.getElementById("modal-edit"); if(old) old.remove();
@@ -557,11 +685,13 @@ window.editCard = function(id){
 
 window.delCard = function(id){
   if(!confirm("Удалить?")) return;
-  cards = cards.filter(function(x){return x.id!==id;});
+  var cards = getCards().filter(function(x){return x.id!==id;});
+  setCards(cards);
   save(); renderTopics();
 };
 
 window.editNote = function(id){
+  var cards = getCards();
   var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
   var old = document.getElementById("modal-note"); if(old) old.remove();
   var modal = document.createElement("div");
@@ -588,6 +718,7 @@ window.editNote = function(id){
 };
 
 window.viewCard = function(id){
+  var cards = getCards();
   var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
   var old = document.getElementById("modal-view"); if(old) old.remove();
   var modal = document.createElement("div");
@@ -612,8 +743,10 @@ window.viewCard = function(id){
 };
 
 $("export-btn").onclick = function(){
-  if(!cards.length){alert("Нет тем");return;}
-  var data = {subject: currentSubject, cards: cards};
+  var cards = getCards();
+  var qs = getQuestions();
+  if(!cards.length && !Object.keys(qs).length){alert("Нет данных");return;}
+  var data = {subject: currentSubject, questions: qs, cards: cards};
   var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
@@ -629,23 +762,28 @@ $("import-json").addEventListener("change", function(e){
   r.onload = function(ev){
     try{
       var data = JSON.parse(ev.target.result);
-      // Поддержка двух форматов: {subject, cards} или просто массив
       var importedCards = Array.isArray(data) ? data : (data.cards || []);
       var importedSubject = data.subject || null;
-
+      var importedQuestions = data.questions || null;
       if(!Array.isArray(importedCards)) throw new Error("Не массив карточек");
 
-      var targetSubject = currentSubject;
       if(importedSubject && importedSubject !== currentSubject){
         var choice = confirm("Файл из предмета «"+importedSubject+"».\n\nOK — создать/переключиться в этот предмет.\nОтмена — загрузить в текущий предмет «"+currentSubject+"».");
         if(choice){
-          if(!subjects[importedSubject]) subjects[importedSubject] = [];
+          if(!subjects[importedSubject]) subjects[importedSubject] = { questions: {}, cards: [] };
           currentSubject = importedSubject;
-          cards = subjects[currentSubject];
         }
-        targetSubject = currentSubject;
       }
 
+      // Добавляем вопросы, если их ещё нет
+      if(importedQuestions){
+        var qs = getQuestions();
+        Object.keys(importedQuestions).forEach(function(k){
+          if(!qs[k]) qs[k] = importedQuestions[k];
+        });
+      }
+
+      var cards = getCards();
       var added = 0, skipped = 0;
       importedCards.forEach(function(d){
         if(!d.question || !d.answer){skipped++;return;}
@@ -660,7 +798,7 @@ $("import-json").addEventListener("change", function(e){
         added++;
       });
       save(); renderSubjectSelect(); renderTopics(); renderStudyStart(); renderSummary();
-      alert("Добавлено: "+added+"\nПропущено: "+skipped);
+      alert("Добавлено карточек: "+added+"\nПропущено: "+skipped);
     }catch(err){alert("Ошибка: "+err.message);}
     e.target.value = "";
   };
@@ -668,14 +806,15 @@ $("import-json").addEventListener("change", function(e){
 });
 
 $("clear-all").onclick = function(){
-  if(!confirm("Удалить ВСЕ темы в предмете «"+currentSubject+"»?")) return;
-  cards = []; save(); renderTopics();
+  if(!confirm("Удалить ВСЕ карточки в предмете «"+currentSubject+"»? Вопросы останутся.")) return;
+  setCards([]); save(); renderTopics();
 };
 
 /* ============ УЧЁБА ============ */
 function renderStudyStart(){
   var area = $("study-area");
-  if(!cards.length){area.innerHTML = "<p>В этом предмете пока нет карточек. Импортируй во вкладке «Импорт».</p>"; return;}
+  var cards = getCards();
+  if(!cards.length){area.innerHTML = "<p>В этом предмете пока нет карточек.</p>"; return;}
   var left = cards.filter(function(c){return !c.learned;}).length;
   var groups = {};
   cards.forEach(function(c){ groups[c.group || "—"] = true; });
@@ -689,7 +828,7 @@ function renderStudyStart(){
     '<div class="row">'+
       '<button class="btn" id="start-all">Все подряд</button>'+
       '<button class="btn ghost" id="start-left">Только неизученные</button>'+
-      '<button class="btn warn" id="start-fav">⭐ Только избранные</button>'+
+      '<button class="btn warn" id="start-fav">⭐ Избранные</button>'+
       '<button class="btn ghost" id="start-post">⏰ Отложенные</button>'+
     '</div>'+
     '<h4 style="margin:22px 0 8px">По темам целиком</h4>'+
@@ -698,15 +837,17 @@ function renderStudyStart(){
       '<button class="btn ghost" id="start-topic-left">Только неизученные</button>'+
     '</div>';
 
-  $("start-all").onclick = function(){studyQueue = cards.slice(); studyMode="cards"; nextCard();};
-  $("start-left").onclick = function(){ studyQueue = cards.filter(function(c){return !c.learned;}); if(!studyQueue.length){alert("Все изучено!");return;} studyMode="cards"; nextCard(); };
-  $("start-fav").onclick = function(){ studyQueue = cards.filter(function(c){return c.favorite;}); if(!studyQueue.length){alert("Нет избранных.");return;} studyMode="cards"; nextCard(); };
-  $("start-post").onclick = function(){ studyQueue = cards.filter(function(c){return c.postponedUntil && c.postponedUntil > Date.now();}); if(!studyQueue.length){alert("Нет отложенных.");return;} studyMode="cards"; nextCard(); };
+  $("start-all").onclick = function(){studyQueue = getCards().slice(); studyMode="cards"; nextCard();};
+  $("start-left").onclick = function(){ studyQueue = getCards().filter(function(c){return !c.learned;}); if(!studyQueue.length){alert("Все изучено!");return;} studyMode="cards"; nextCard(); };
+  $("start-fav").onclick = function(){ studyQueue = getCards().filter(function(c){return c.favorite;}); if(!studyQueue.length){alert("Нет избранных.");return;} studyMode="cards"; nextCard(); };
+  $("start-post").onclick = function(){ studyQueue = getCards().filter(function(c){return c.postponedUntil && c.postponedUntil > Date.now();}); if(!studyQueue.length){alert("Нет отложенных.");return;} studyMode="cards"; nextCard(); };
   $("start-topic-all").onclick = function(){ studyQueue = buildTopicQueue(false); studyMode="topics"; nextTopic(); };
   $("start-topic-left").onclick = function(){ studyQueue = buildTopicQueue(true); if(!studyQueue.length){alert("Все темы изучены!");return;} studyMode="topics"; nextTopic(); };
 }
 
 function buildTopicQueue(onlyUnlearned){
+  var cards = getCards();
+  var qs = getQuestions();
   var groups = {};
   cards.forEach(function(c){
     var g = c.group || "—";
@@ -714,11 +855,15 @@ function buildTopicQueue(onlyUnlearned){
     groups[g].push(c);
   });
   var list = [];
-  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
+  Object.keys(groups).sort(function(a,b){
+    var na = parseFloat(a), nb = parseFloat(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  }).forEach(function(g){
     var gCards = groups[g];
     var allLearned = gCards.every(function(c){return c.learned;});
     if(onlyUnlearned && allLearned) return;
-    list.push({group: g, title: QUESTION_TITLES[g] || ("Тема " + g), cards: gCards});
+    list.push({group: g, title: qs[g] || ("Тема " + g), cards: gCards});
   });
   return list;
 }
@@ -731,7 +876,7 @@ function nextCard(){
   var noteHtml = cur.note ? '<div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:10px;border-radius:6px;margin:10px 0;font-size:.88rem;white-space:pre-wrap"><b>📝 Заметка:</b>\n'+esc(cur.note)+'</div>' : '';
   var learnedTag = cur.learned ? ' <span class="pill" style="background:#d1fae5;color:#065f46">Изучено</span>' : '';
   var isPost = cur.postponedUntil && cur.postponedUntil > Date.now();
-  var postTag = isPost ? ' <span class="pill" style="background:#fed7aa;color:#7c2d12">⏰ отложено</span>' : '';
+  var postTag = isPost ? ' <span class="pill" style="background:#fed7aa;color:#7c2d12">⏰</span>' : '';
   var favTag = cur.favorite ? ' <span class="pill" style="background:#fef3c7;color:#92400e">⭐</span>' : '';
 
   area.innerHTML = '<h3>Вопрос'+learnedTag+postTag+favTag+'</h3><p><strong>'+esc(cur.question)+'</strong></p>'+imgsHtml+noteHtml+
@@ -815,32 +960,32 @@ function rateTopic(q){
   save(); nextTopic();
 }
 
+/* ============ СВОДКА ============ */
 function renderSummary(){
+  var cards = getCards();
+  var qs = getQuestions();
   var totalCards = cards.length;
   var learnedCards = cards.filter(function(c){return c.learned;}).length;
   var pct = totalCards ? Math.round(learnedCards/totalCards*100) : 0;
   $("overall-progress").innerHTML = '<div class="big-pbar"><div style="width:'+pct+'%"></div><span>'+esc(currentSubject)+': '+learnedCards+' из '+totalCards+' · '+pct+'%</span></div>';
 
-  if(!cards.length){
-    $("summary-list").innerHTML = '<p class="hint">В этом предмете пока нет карточек.</p>';
+  // Строим сводку из вопросов предмета + реальных групп карточек
+  var allGroups = {};
+  Object.keys(qs).forEach(function(g){ allGroups[g] = true; });
+  cards.forEach(function(c){ if(c.group) allGroups[c.group] = true; });
+
+  if(!Object.keys(allGroups).length){
+    $("summary-list").innerHTML = '<p class="hint">В этом предмете пока нет ни вопросов, ни карточек.</p>';
     return;
   }
 
-  // Собираем группы из карточек ТЕКУЩЕГО предмета
-  var groupsMap = {};
-  cards.forEach(function(c){
-    var g = c.group || "—";
-    if(!groupsMap[g]) groupsMap[g] = [];
-    groupsMap[g].push(c);
-  });
-
   var html = "";
-  Object.keys(groupsMap).sort(function(a,b){
-    var na = parseInt(a), nb = parseInt(b);
+  Object.keys(allGroups).sort(function(a,b){
+    var na = parseFloat(a), nb = parseFloat(b);
     if(!isNaN(na) && !isNaN(nb)) return na - nb;
     return a.localeCompare(b);
   }).forEach(function(g){
-    var group = groupsMap[g];
+    var group = cards.filter(function(c){return c.group === g;});
     var gTotal = group.length;
     var gLearned = group.filter(function(c){return c.learned;}).length;
     var status = "none", icon = "○", cls = "sum-item none";
@@ -849,14 +994,16 @@ function renderSummary(){
     if(summaryFilter === "learned" && status !== "full") return;
     if(summaryFilter === "left" && status === "full") return;
 
-    // Заголовок вопроса: из QUESTION_TITLES для этого предмета или первая карточка группы
-    var title = QUESTION_TITLES[g] || group[0].question || ("Тема " + g);
-
+    var title = qs[g] || (gTotal ? group[0].question : "Вопрос " + g);
     html += '<div class="'+cls+'">';
     html += '<div class="sum-num">'+g+'.</div>';
     html += '<div class="sum-body">';
     html += '<p class="sum-q">'+esc(title)+'</p>';
-    html += '<p class="sum-meta">'+gLearned+'/'+gTotal+' подтем'+(gLearned === gTotal ? ' · готово' : '')+'</p>';
+    if(gTotal === 0){
+      html += '<p class="sum-meta">карточек нет</p>';
+    } else {
+      html += '<p class="sum-meta">'+gLearned+'/'+gTotal+' подтем'+(gLearned === gTotal ? ' · готово' : '')+'</p>';
+    }
     html += '</div>';
     html += '<div class="sum-status">'+icon+'</div>';
     html += '</div>';
@@ -869,6 +1016,7 @@ $("filter-all").onclick = function(){summaryFilter="all"; renderSummary();};
 $("filter-learned").onclick = function(){summaryFilter="learned"; renderSummary();};
 $("filter-left").onclick = function(){summaryFilter="left"; renderSummary();};
 
+/* ============ СТАРТ ============ */
 renderSubjectSelect();
 renderTopics();
 </script>
