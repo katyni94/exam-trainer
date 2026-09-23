@@ -820,9 +820,27 @@ function renderSummary(){
   var learnedCards = cards.filter(function(c){return c.learned;}).length;
   var pct = totalCards ? Math.round(learnedCards/totalCards*100) : 0;
   $("overall-progress").innerHTML = '<div class="big-pbar"><div style="width:'+pct+'%"></div><span>'+esc(currentSubject)+': '+learnedCards+' из '+totalCards+' · '+pct+'%</span></div>';
+
+  if(!cards.length){
+    $("summary-list").innerHTML = '<p class="hint">В этом предмете пока нет карточек.</p>';
+    return;
+  }
+
+  // Собираем группы из карточек ТЕКУЩЕГО предмета
+  var groupsMap = {};
+  cards.forEach(function(c){
+    var g = c.group || "—";
+    if(!groupsMap[g]) groupsMap[g] = [];
+    groupsMap[g].push(c);
+  });
+
   var html = "";
-  Object.keys(QUESTION_TITLES).sort(function(a,b){return parseInt(a)-parseInt(b);}).forEach(function(g){
-    var group = cards.filter(function(c){return c.group === g;});
+  Object.keys(groupsMap).sort(function(a,b){
+    var na = parseInt(a), nb = parseInt(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  }).forEach(function(g){
+    var group = groupsMap[g];
     var gTotal = group.length;
     var gLearned = group.filter(function(c){return c.learned;}).length;
     var status = "none", icon = "○", cls = "sum-item none";
@@ -830,8 +848,20 @@ function renderSummary(){
     else if(gLearned > 0){status="part";icon="◐";cls="sum-item part";}
     if(summaryFilter === "learned" && status !== "full") return;
     if(summaryFilter === "left" && status === "full") return;
-    html += '<div class="'+cls+'"><div class="sum-num">'+g+'.</div><div class="sum-body"><p class="sum-q">'+esc(QUESTION_TITLES[g])+'</p><p class="sum-meta">Тема '+g+(gTotal?' · '+gLearned+'/'+gTotal:' · нет карточек')+'</p></div><div class="sum-status">'+icon+'</div></div>';
+
+    // Заголовок вопроса: из QUESTION_TITLES для этого предмета или первая карточка группы
+    var title = QUESTION_TITLES[g] || group[0].question || ("Тема " + g);
+
+    html += '<div class="'+cls+'">';
+    html += '<div class="sum-num">'+g+'.</div>';
+    html += '<div class="sum-body">';
+    html += '<p class="sum-q">'+esc(title)+'</p>';
+    html += '<p class="sum-meta">'+gLearned+'/'+gTotal+' подтем'+(gLearned === gTotal ? ' · готово' : '')+'</p>';
+    html += '</div>';
+    html += '<div class="sum-status">'+icon+'</div>';
+    html += '</div>';
   });
+
   $("summary-list").innerHTML = html || '<p class="hint">Ничего не найдено.</p>';
 }
 
