@@ -6,7 +6,8 @@
 <title>Тренер</title>
 <style>
 *{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f1f5f9;color:#0f172a;transition:background .2s,color .2s}
+body.dark{background:#0f172a;color:#e2e8f0}
 header{background:#1e3a8a;color:#fff;padding:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;position:sticky;top:0;z-index:10}
 header h1{margin:0;font-size:1rem;flex:1;min-width:100px}
 nav{display:flex;gap:4px;flex-wrap:wrap}
@@ -17,24 +18,41 @@ nav button.active{background:#f59e0b}
 .btn.ghost:hover{background:#cbd5e1}
 .btn.danger{background:#ef4444}
 .btn.ok{background:#10b981}
+.btn.warn{background:#f59e0b}
 .btn.mini{padding:4px 8px;font-size:.72rem}
+.btn.star{background:transparent;color:#f59e0b;font-size:1.1rem;padding:2px 6px;border:1px solid #cbd5e1}
+.btn.star.on{background:#fef3c7;border-color:#f59e0b}
 main{padding:14px;max-width:960px;margin:0 auto}
 .tab{display:none}.tab.active{display:block}
 h2{margin-top:0;font-size:1.15rem}
 h3{margin:12px 0 6px;font-size:1rem}
+h4{margin:12px 0 6px;font-size:.95rem}
 label{display:block;margin:10px 0 4px;font-weight:600;font-size:.88rem}
 textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;font-size:.92rem}
 textarea.tall{min-height:220px;font-family:monospace;font-size:.82rem}
+textarea.big{min-height:320px;font-size:.92rem;line-height:1.5}
 input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;font-size:.92rem}
+body.dark textarea,body.dark input[type=text]{background:#1e293b;color:#e2e8f0;border-color:#475569}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .row .btn{flex:0 0 auto}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin:8px 0}
+body.dark .card{background:#1e293b;border-color:#334155}
 .card.learned{background:#f0fdf4;border-color:#86efac}
+body.dark .card.learned{background:#14532d33;border-color:#166534}
+.card.postponed{background:#fef3c7;border-color:#f59e0b}
+body.dark .card.postponed{background:#78350f33;border-color:#b45309}
 .card .meta{font-size:.75rem;color:#64748b;margin:4px 0}
 .card button{padding:5px 10px;margin-right:5px;margin-top:6px;font-size:.78rem}
-.group-header{margin:18px 0 6px;font-size:.85rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.group-block{margin:22px 0 8px;border-bottom:2px solid #cbd5e1;padding-bottom:6px}
+body.dark .group-block{border-color:#334155}
+.group-header{font-size:.75rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.group-title{font-weight:700;font-size:1rem;color:#1e3a8a;margin-top:2px}
+body.dark .group-title{color:#93c5fd}
+.group-meta{font-size:.78rem;color:#64748b;margin-top:4px}
 .study-box{background:#fff;border-radius:10px;padding:18px}
+body.dark .study-box{background:#1e293b}
 .answer{background:#f8fafc;border-left:4px solid #3b82f6;padding:12px;border-radius:6px;margin:10px 0;white-space:pre-wrap;font-size:.92rem}
+body.dark .answer{background:#0f172a}
 .answer.plan{border-color:#10b981}
 .rating{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .rating button{padding:8px 14px;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:.85rem}
@@ -43,25 +61,38 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
 .rating button:nth-child(3){background:#3b82f6}
 .rating button:nth-child(4){background:#10b981}
 .preview{background:#fff;border-left:4px solid #3b82f6;padding:10px;margin:8px 0;border-radius:6px}
+body.dark .preview{background:#1e293b}
 .preview .q{font-weight:600;font-size:.92rem}
 .preview .a{font-size:.82rem;color:#475569;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:5px}
+body.dark .preview .a{color:#94a3b8}
 .hint{font-size:.82rem;color:#64748b;margin-top:6px}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;background:#e2e8f0;color:#475569;margin-left:5px}
+body.dark .pill{background:#334155;color:#cbd5e1}
 .card-img{max-width:100%;border-radius:6px;margin:10px 0;display:block}
 .img-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;background:#dbeafe;color:#1e40af;margin-left:5px}
 .big-pbar{background:#e2e8f0;border-radius:8px;height:22px;overflow:hidden;margin:10px 0;position:relative}
+body.dark .big-pbar{background:#334155}
 .big-pbar>div{background:linear-gradient(90deg,#10b981,#22c55e);height:100%;transition:.4s}
 .big-pbar>span{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;color:#0f172a}
+body.dark .big-pbar>span{color:#e2e8f0}
 .sum-item{display:flex;gap:10px;align-items:center;padding:10px;background:#fff;border-radius:8px;margin:6px 0;border-left:4px solid #e2e8f0}
+body.dark .sum-item{background:#1e293b;border-color:#334155}
 .sum-item.full{border-color:#10b981;background:#f0fdf4}
+body.dark .sum-item.full{background:#14532d33}
 .sum-item.part{border-color:#f59e0b;background:#fffbeb}
-.sum-item.none{border-color:#e2e8f0}
+body.dark .sum-item.part{background:#78350f33}
 .sum-num{font-weight:700;color:#1e3a8a;min-width:28px;font-size:.95rem}
+body.dark .sum-num{color:#93c5fd}
 .sum-body{flex:1}
 .sum-q{font-size:.88rem;margin:0}
 .sum-meta{font-size:.72rem;color:#64748b;margin-top:3px}
 .sum-status{font-size:1.4rem;min-width:32px;text-align:center}
-.sum-dup{opacity:.6;font-style:italic}
+.topic-part{background:#f0fdf4;border-left:3px solid #10b981;border-radius:6px;padding:10px;margin:8px 0}
+body.dark .topic-part{background:#14532d33}
+.topic-part .pt{font-weight:600;font-size:.88rem;margin-bottom:4px}
+.topic-answer{background:#f8fafc;border-radius:6px;padding:10px;margin:8px 0;font-size:.88rem;white-space:pre-wrap}
+body.dark .topic-answer{background:#0f172a}
+#dark-btn{background:transparent;border:1px solid rgba(255,255,255,.4);padding:6px 10px;font-size:1rem}
 </style>
 </head>
 <body>
@@ -73,6 +104,7 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
     <button data-tab="study">Учёба</button>
     <button data-tab="summary">Сводка</button>
   </nav>
+  <button id="dark-btn" title="Тёмная тема">🌙</button>
 </header>
 <main>
 <section id="import" class="tab active">
@@ -90,10 +122,14 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
     <button class="btn ok" id="add-all">Добавить все</button>
   </div>
 </section>
+
 <section id="topics" class="tab">
   <h2>Темы <span class="pill" id="topics-count">0</span> <span class="pill" id="learned-count" style="background:#d1fae5;color:#065f46">Изучено: 0</span></h2>
   <div class="row">
     <input type="text" id="search" placeholder="Поиск...">
+    <button class="btn ghost" id="expand-all">Развернуть все</button>
+    <button class="btn ghost" id="collapse-all">Свернуть все</button>
+    <button class="btn ghost" id="print-btn">🖨 PDF</button>
     <button class="btn ghost" id="export-btn">Экспорт</button>
     <label class="btn ghost" style="margin:0;cursor:pointer;text-align:center">
       Импорт<input type="file" id="import-json" accept=".json" style="display:none">
@@ -102,10 +138,12 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
   </div>
   <div id="topics-list"></div>
 </section>
+
 <section id="study" class="tab">
   <h2>Учёба</h2>
   <div id="study-area" class="study-box"></div>
 </section>
+
 <section id="summary" class="tab">
   <h2>Сводка по вопросам экзамена</h2>
   <div id="overall-progress"></div>
@@ -117,71 +155,31 @@ input[type=text]{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6
   <div id="summary-list"></div>
 </section>
 </main>
+
 <script>
 var cards = JSON.parse(localStorage.getItem("cards") || "[]");
 var preview = [], studyQueue = [], cur = null;
+var studyMode = "cards";
+var curTopic = null;
 var summaryFilter = "all";
+var collapsedGroups = {};
 
-// Сводка: вопрос экзамена → группа карточек
-var SUMMARY = [
-  {n:1, q:"Выбор ведущей машины при возведении насыпи", g:"1"},
-  {n:2, q:"Строительство покрытий из холодной асфальтобетонной смеси", g:"2"},
-  {n:3, q:"Контроль качества уплотнения грунтов", g:"3"},
-  {n:4, q:"Возведение насыпей на заболоченном участке", g:"4"},
-  {n:5, q:"Определение параметров потока при возведении земляного полотна", g:"5"},
-  {n:6, q:"Основания и покрытия из щебня и грунтов с органическим вяжущим (смешение на дороге)", g:"6"},
-  {n:7, q:"Теоретические основы уплотнения грунтов", g:"7"},
-  {n:8, q:"Уход за цементогрунтом", g:"8"},
-  {n:9, q:"Технология строительства цементобетонных покрытий", g:"9"},
-  {n:10, q:"(повтор вопроса 1)", g:"1", dup:1},
-  {n:11, q:"(повтор вопроса 2)", g:"2", dup:2},
-  {n:12, q:"(повтор вопроса 3)", g:"3", dup:3},
-  {n:13, q:"Оценка климатической характеристики района строительства", g:"13"},
-  {n:14, q:"Приемочный контроль при возведении земляного полотна", g:"14"},
-  {n:15, q:"Устройство оснований и покрытий способом пропитки и полупропитки", g:"15"},
-  {n:16, q:"Рекультивация сосредоточенного резерва", g:"16"},
-  {n:17, q:"(повтор вопроса 5)", g:"5", dup:5},
-  {n:18, q:"Подготовка поверхности земляного полотна к строительству дорожной одежды", g:"18"},
-  {n:19, q:"Технология строительства покрытий из горячих асфальтобетонных смесей", g:"19"},
-  {n:20, q:"Технология строительства сборных покрытий", g:"20"},
-  {n:21, q:"Технология строительства основания из рядового щебня", g:"21"},
-  {n:22, q:"Определение количества проходов катка при уплотнении грунтов", g:"22"},
-  {n:23, q:"Производственный контроль ведения работ", g:"28"},
-  {n:24, q:"(повтор вопроса 18)", g:"18", dup:18},
-  {n:25, q:"Возведение насыпей при пониженных температурах", g:"25"},
-  {n:26, q:"Основания и покрытия из грунтов с неорганическим вяжущим (смешение на дороге)", g:"26"},
-  {n:27, q:"(продолжение вопроса 26)", g:"26", dup:26},
-  {n:28, q:"Виды производственного контроля", g:"28"},
-  {n:29, q:"Влияние влажности грунта на его плотность", g:"29"},
-  {n:30, q:"Основания и покрытия из щебня и грунтов с органическим вяжущим (смесительная установка)", g:"30"},
-  {n:31, q:"(повтор вопроса 20)", g:"20", dup:20},
-  {n:32, q:"Возведение земляного полотна отрядом с ведущим экскаватором", g:"32"},
-  {n:33, q:"Технология строительства основания из фракционного щебня", g:"33"},
-  {n:34, q:"Классификация дорожно-строительных работ, типы поперечных профилей земляного полотна", g:"34"},
-  {n:35, q:"Устройство слоёв износа", g:"35"},
-  {n:36, q:"Возведение насыпей скреперами", g:"36"},
-  {n:37, q:"Классификация асфальтобетонов и асфальтобетонных смесей", g:"37"},
-  {n:38, q:"(повтор вопроса 32)", g:"32", dup:32},
-  {n:39, q:"(повтор вопроса 21)", g:"21", dup:21},
-  {n:40, q:"Устройство температурных швов в цементобетонном покрытии", g:"40"},
-  {n:41, q:"(повтор вопроса 7)", g:"7", dup:7},
-  {n:42, q:"(повтор вопроса 9)", g:"9", dup:9},
-  {n:43, q:"Строительство фундамента водопропускных труб", g:"43"},
-  {n:44, q:"Основания и покрытия из материалов и грунтов с неорганическим вяжущим (смесительная установка)", g:"44"},
-  {n:45, q:"(повтор вопроса 23)", g:"28", dup:23},
-  {n:46, q:"Подготовка и порядок разработки сосредоточенного резерва", g:"46"},
-  {n:47, q:"Технология строительства дренирующих слоёв дорожной одежды", g:"47"},
-  {n:48, q:"Устройство оснований по способу заклинки", g:"48"},
-  {n:49, q:"Функции и регламент операционного контроля", g:"49"},
-  {n:50, q:"(повтор вопроса 4)", g:"4", dup:4},
-  {n:51, q:"(повтор вопроса 5)", g:"5", dup:5},
-  {n:52, q:"(повтор вопроса 6)", g:"6", dup:6},
-  {n:53, q:"Технология строительства покрытий из щебёночно-мастичных асфальтобетонных смесей", g:"53"}
-];
+var QUESTION_TITLES = {
+  "1":"Выбор ведущей машины при возведении насыпи","2":"Строительство покрытий из холодной асфальтобетонной смеси","3":"Контроль качества уплотнения грунтов","4":"Возведение насыпей на заболоченном участке","5":"Определение параметров потока при возведении земляного полотна","6":"Устройство оснований и покрытий из щебня и грунтов, укреплённых органическими вяжущими (смешение на дороге)","7":"Теоретические основы уплотнения грунтов","8":"Уход за цементогрунтом","9":"Технология строительства цементобетонных покрытий","13":"Оценка климатической характеристики района строительства","14":"Приемочный контроль при возведении земляного полотна","15":"Устройство оснований и покрытий способом пропитки и полупропитки","16":"Рекультивация сосредоточенного резерва","18":"Подготовка поверхности земляного полотна к строительству дорожной одежды","19":"Технология строительства покрытий из горячих асфальтобетонных смесей","20":"Технология строительства сборных покрытий","21":"Технология строительства основания из рядового щебня","22":"Определение количества проходов катка при уплотнении грунтов","25":"Возведение насыпей при пониженных температурах","26":"Устройство оснований и покрытий из грунтов, укреплённых неорганическими вяжущими (смешение на дороге)","28":"Производственный контроль ведения работ. Виды контроля","29":"Влияние влажности грунта на его плотность","30":"Устройство оснований из щебня и грунтов, обработанных органическими вяжущими в смесительной установке","32":"Возведение земляного полотна отрядом с ведущим экскаватором","33":"Технология строительства основания из фракционного щебня","34":"Классификация дорожно-строительных работ, типы поперечных профилей земляного полотна","35":"Устройство слоёв износа","36":"Возведение насыпей скреперами","37":"Классификация асфальтобетонов и асфальтобетонных смесей","40":"Устройство температурных швов в цементобетонном покрытии","43":"Строительство фундамента водопропускных труб","44":"Устройство оснований из материалов и грунтов, обработанных неорганическим вяжущим в смесительной установке","46":"Подготовка и порядок разработки сосредоточенного резерва","47":"Технология строительства дренирующих слоёв дорожной одежды","48":"Устройство оснований по способу заклинки","49":"Функции и регламент операционного контроля","53":"Технология строительства покрытий из щебёночно-мастичных асфальтобетонных смесей"
+};
 
 function $(id){return document.getElementById(id);}
 function save(){try{localStorage.setItem("cards", JSON.stringify(cards));}catch(e){alert("Хранилище переполнено!");}}
 function esc(t){var d=document.createElement("div");d.textContent=t||"";return d.innerHTML;}
+
+// Тёмная тема
+if(localStorage.getItem("dark")==="1"){ document.body.classList.add("dark"); $("dark-btn").textContent="☀"; }
+$("dark-btn").onclick = function(){
+  document.body.classList.toggle("dark");
+  var isDark = document.body.classList.contains("dark");
+  localStorage.setItem("dark", isDark?"1":"0");
+  $("dark-btn").textContent = isDark ? "☀" : "🌙";
+};
 
 document.querySelectorAll("nav button").forEach(function(b){
   b.onclick = function(){
@@ -198,11 +196,8 @@ document.querySelectorAll("nav button").forEach(function(b){
 function parseText(text){
   var out = [];
   var re = /^Тема\s+([\d.]+)[.:]?\s*(.+)$/gmi;
-  var matches = [];
-  var m;
-  while((m = re.exec(text)) !== null){
-    matches.push({index:m.index, num:m[1], question:m[2].trim()});
-  }
+  var matches = [], m;
+  while((m = re.exec(text)) !== null) matches.push({index:m.index, num:m[1], question:m[2].trim()});
   if(matches.length === 0){
     out.push({num:"", group:"", question:"Без названия", answer:text, plan:autoPlan(text), image:""});
     return out;
@@ -259,7 +254,7 @@ $("clear-import").onclick = function(){
 
 $("add-all").onclick = function(){
   preview.forEach(function(p){
-    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, image:p.image||"", learned:false, due:Date.now(), reps:0, interval:0, ease:2.5});
+    cards.push({id:Date.now()+Math.random(), num:p.num||"", group:p.group||"", question:p.question, answer:p.answer, plan:p.plan, image:p.image||"", note:"", favorite:false, postponedUntil:0, learned:false, due:Date.now(), reps:0, interval:0, ease:2.5});
   });
   save();
   $("preview-block").style.display = "none";
@@ -276,7 +271,11 @@ function renderTopics(){
   $("learned-count").textContent = "Изучено: " + learned + "/" + total;
   if(!cards.length){$("topics-list").innerHTML = '<p class="hint">Пока нет тем.</p>'; return;}
   var filter = ($("search").value || "").toLowerCase();
-  var filtered = cards.filter(function(c){return c.question.toLowerCase().includes(filter);});
+  var filtered = cards.filter(function(c){
+    if(!filter) return true;
+    var gt = QUESTION_TITLES[c.group] || "";
+    return c.question.toLowerCase().includes(filter) || gt.toLowerCase().includes(filter);
+  });
   var groups = {};
   filtered.forEach(function(c){
     var g = c.group || "—";
@@ -287,42 +286,206 @@ function renderTopics(){
   Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
     var list = groups[g];
     var gLearned = list.filter(function(c){return c.learned;}).length;
-    html += '<div class="group-header">Тема '+g+' · '+list.length+' частей · изучено '+gLearned+'/'+list.length+'</div>';
-    html += list.map(function(c){
-      var cls = c.learned ? "card learned" : "card";
-      var imgTag = c.image ? ' <span class="img-badge">📷</span>' : '';
-      var btnLearn = c.learned
-        ? '<button class="btn ghost mini" onclick="toggleLearn('+c.id+')">Снять отметку</button>'
-        : '<button class="btn ok mini" onclick="toggleLearn('+c.id+')">✓ Изучено</button>';
-      return '<div class="'+cls+'" style="margin-left:14px"><strong>'+esc(c.question)+'</strong>'+imgTag+'<div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div>'+btnLearn+'<button class="btn ghost mini" onclick="viewCard('+c.id+')">Показать</button><button class="btn ghost mini" onclick="editCard('+c.id+')">Изменить</button><button class="btn danger mini" onclick="delCard('+c.id+')">Удалить</button></div>';
-    }).join("");
+    var gTotal = list.length;
+    var isCollapsed = collapsedGroups[g];
+    var title = QUESTION_TITLES[g] || ("Тема " + g);
+
+    html += '<div class="group-block">';
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">';
+    html += '<div style="flex:1;min-width:200px">';
+    html += '<div class="group-header">Вопрос '+g+'</div>';
+    html += '<div class="group-title">'+esc(title)+'</div>';
+    html += '<div class="group-meta">Подтем: '+gTotal+' · изучено: '+gLearned+'/'+gTotal+'</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    html += '<button class="btn ok mini" onclick="showWholeTopic(\''+g+'\')">📖 Вся тема</button>';
+    html += '<button class="btn ghost mini" onclick="toggleGroup(\''+g+'\')">'+(isCollapsed?'Развернуть ▾':'Свернуть ▴')+'</button>';
+    html += '</div></div></div>';
+
+    if(!isCollapsed){
+      html += list.map(function(c){
+        var cls = "card";
+        if(c.postponedUntil && c.postponedUntil > Date.now()) cls += " postponed";
+        else if(c.learned) cls += " learned";
+        var imgTag = c.image ? ' <span class="img-badge">📷</span>' : '';
+        var noteTag = c.note ? ' <span class="img-badge" style="background:#fef3c7;color:#92400e">📝</span>' : '';
+        var starTag = c.favorite ? ' <span class="img-badge" style="background:#fef3c7;color:#92400e">⭐</span>' : '';
+        var postponeTag = (c.postponedUntil && c.postponedUntil > Date.now()) ? ' <span class="img-badge" style="background:#fed7aa;color:#7c2d12">⏰</span>' : '';
+        var btnLearn = c.learned
+          ? '<button class="btn ghost mini" onclick="toggleLearn('+c.id+')">Снять отметку</button>'
+          : '<button class="btn ok mini" onclick="toggleLearn('+c.id+')">✓ Изучено</button>';
+        var btnStar = c.favorite
+          ? '<button class="btn star on" onclick="toggleFav('+c.id+')" title="Убрать из избранного">⭐</button>'
+          : '<button class="btn star" onclick="toggleFav('+c.id+')" title="В избранное">☆</button>';
+        return '<div class="'+cls+'" style="margin-left:14px"><strong>'+esc(c.question)+'</strong>'+imgTag+noteTag+starTag+postponeTag+'<div class="meta">'+(c.num?'№'+c.num+' · ':'')+'повторений: '+c.reps+'</div>'+btnStar+btnLearn+'<button class="btn ghost mini" onclick="editNote('+c.id+')">✎ Заметка</button><button class="btn ghost mini" onclick="viewCard('+c.id+')">Показать</button><button class="btn ghost mini" onclick="editCard('+c.id+')">Изменить</button><button class="btn danger mini" onclick="delCard('+c.id+')">Удалить</button></div>';
+      }).join("");
+    }
   });
   $("topics-list").innerHTML = html;
 }
 
+window.toggleGroup = function(g){ collapsedGroups[g] = !collapsedGroups[g]; renderTopics(); };
+$("expand-all").onclick = function(){ collapsedGroups = {}; renderTopics(); };
+$("collapse-all").onclick = function(){
+  var groups = {};
+  cards.forEach(function(c){ groups[c.group || "—"] = true; });
+  Object.keys(groups).forEach(function(g){ collapsedGroups[g] = true; });
+  renderTopics();
+};
+
 window.toggleLearn = function(id){
-  var c = cards.filter(function(x){return x.id===id;})[0];
-  if(!c) return;
-  c.learned = !c.learned;
-  save(); renderTopics();
+  var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  c.learned = !c.learned; save(); renderTopics();
+};
+window.toggleFav = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  c.favorite = !c.favorite; save(); renderTopics();
 };
 
 $("search").addEventListener("input", renderTopics);
 
-window.viewCard = function(id){
-  var c = cards.filter(function(x){return x.id===id;})[0];
-  if(!c) return;
-  var old = document.getElementById("modal-view");
+/* ============ ПОКАЗАТЬ ВСЮ ТЕМУ ============ */
+window.showWholeTopic = function(g){
+  var gCards = cards.filter(function(c){return c.group === g;});
+  var title = QUESTION_TITLES[g] || ("Тема " + g);
+  var old = document.getElementById("modal-topic");
   if(old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "modal-topic";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.9);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
+  var inner = '<button id="topic-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:720px;margin:0 auto;color:#0f172a">'+
+    '<div style="font-size:.75rem;color:#64748b;font-weight:600;text-transform:uppercase">Вопрос '+g+'</div>'+
+    '<h2 style="margin:4px 0 16px;color:#1e3a8a">'+esc(title)+'</h2>';
+  gCards.forEach(function(c){
+    inner += '<div style="margin:16px 0;padding:14px;background:#f8fafc;border-radius:8px;border-left:4px solid #3b82f6">';
+    inner += '<div style="font-weight:700;font-size:.95rem;margin-bottom:8px">'+esc(c.question)+'</div>';
+    if(c.image) inner += '<img src="'+esc(c.image)+'" style="max-width:100%;border-radius:6px;margin:8px 0">';
+    inner += '<div style="font-size:.75rem;font-weight:600;color:#10b981;text-transform:uppercase;margin:8px 0 4px">План</div>';
+    inner += '<pre style="white-space:pre-wrap;font-family:inherit;font-size:.88rem;margin:0;background:#f0fdf4;padding:10px;border-radius:6px">'+esc(c.plan)+'</pre>';
+    inner += '<div style="font-size:.75rem;font-weight:600;color:#3b82f6;text-transform:uppercase;margin:12px 0 4px">Ответ</div>';
+    inner += '<div style="white-space:pre-wrap;font-size:.88rem;line-height:1.5">'+esc(c.answer)+'</div>';
+    if(c.note) inner += '<div style="background:#fffbeb;border-left:3px solid #f59e0b;padding:8px;border-radius:6px;margin-top:10px;font-size:.85rem;white-space:pre-wrap"><b>📝 Заметка:</b> '+esc(c.note)+'</div>';
+    inner += '</div>';
+  });
+  inner += '<div style="margin-top:20px;text-align:center"><button id="topic-close-2" style="background:#3b82f6;color:#fff;border:none;padding:14px 40px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600">Закрыть</button></div>';
+  inner += '</div>';
+  modal.innerHTML = inner;
+  document.body.appendChild(modal);
+  document.getElementById("topic-close").onclick = function(){modal.remove();};
+  document.getElementById("topic-close-2").onclick = function(){modal.remove();};
+  modal.onclick = function(e){if(e.target===modal) modal.remove();};
+};
+
+/* ============ ПЕЧАТЬ ============ */
+$("print-btn").onclick = function(){
+  if(!cards.length){alert("Нет тем");return;}
+  var groups = {};
+  cards.forEach(function(c){
+    var g = c.group || "—";
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(c);
+  });
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Тренер — темы</title><style>body{font-family:Georgia,serif;max-width:800px;margin:20px auto;padding:20px;color:#111;line-height:1.5}h1{color:#1e3a8a;border-bottom:2px solid #1e3a8a;padding-bottom:6px;margin-top:30px}h2{color:#1e3a8a;margin-top:24px}h3{color:#333;margin-top:16px}pre{white-space:pre-wrap;font-family:inherit;background:#f5f5f5;padding:8px;border-radius:4px;font-size:.9em}.note{background:#fffbe6;border-left:3px solid #f59e0b;padding:6px;margin-top:8px;font-size:.9em}.part{margin:14px 0;page-break-inside:avoid}@media print{h1{page-break-before:always}h1:first-of-type{page-break-before:auto}}</style></head><body>';
+  html += '<h1 style="text-align:center">Тренер — все темы</h1>';
+  html += '<p style="text-align:center;color:#666">Дата: ' + new Date().toLocaleDateString('ru') + ' · Всего карточек: ' + cards.length + '</p>';
+  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
+    var list = groups[g];
+    html += '<h1>Вопрос '+g+'. '+esc(QUESTION_TITLES[g] || ("Тема " + g))+'</h1>';
+    list.forEach(function(c){
+      html += '<div class="part">';
+      html += '<h3>'+esc(c.question)+'</h3>';
+      if(c.plan) html += '<pre><b>План:</b>\n'+esc(c.plan)+'</pre>';
+      html += '<div>'+esc(c.answer)+'</div>';
+      if(c.note) html += '<div class="note"><b>📝 Заметка:</b> '+esc(c.note)+'</div>';
+      html += '</div>';
+    });
+  });
+  html += '</body></html>';
+  var w = window.open("", "_blank");
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 500);
+};
+
+window.editCard = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var old = document.getElementById("modal-edit");
+  if(old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "modal-edit";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.9);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
+  modal.innerHTML =
+    '<button id="edit-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:720px;margin:0 auto;color:#0f172a">'+
+      '<h3 style="margin:0 0 10px">Редактирование карточки</h3>'+
+      '<label>Вопрос</label><textarea id="ed-q" style="min-height:60px">'+esc(c.question)+'</textarea>'+
+      '<label>План</label><textarea id="ed-p" class="big">'+esc(c.plan)+'</textarea>'+
+      '<label>Ответ</label><textarea id="ed-a" class="big">'+esc(c.answer)+'</textarea>'+
+      '<label>Картинка (URL)</label><input type="text" id="ed-i" value="'+esc(c.image||"")+'">'+
+      '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button id="ed-save" style="background:#10b981;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600">Сохранить</button>'+
+        '<button id="ed-cancel" style="background:#e2e8f0;color:#0f172a;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.95rem">Отмена</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  document.getElementById("ed-save").onclick = function(){
+    c.question = document.getElementById("ed-q").value.trim();
+    c.plan = document.getElementById("ed-p").value.trim();
+    c.answer = document.getElementById("ed-a").value.trim();
+    c.image = document.getElementById("ed-i").value.trim();
+    save(); modal.remove(); renderTopics();
+  };
+  document.getElementById("ed-cancel").onclick = function(){modal.remove();};
+  document.getElementById("edit-close").onclick = function(){modal.remove();};
+  modal.onclick = function(e){if(e.target===modal) modal.remove();};
+};
+
+window.delCard = function(id){
+  if(!confirm("Удалить?")) return;
+  cards = cards.filter(function(x){return x.id!==id;});
+  save(); renderTopics();
+};
+
+window.editNote = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var old = document.getElementById("modal-note");
+  if(old) old.remove();
+  var modal = document.createElement("div");
+  modal.id = "modal-note";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.9);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
+  modal.innerHTML =
+    '<button id="note-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:640px;margin:0 auto;color:#0f172a">'+
+      '<h3 style="margin:0 0 6px">Заметка</h3>'+
+      '<p style="margin:0 0 10px;font-size:.85rem;color:#64748b">'+esc(c.question)+'</p>'+
+      '<textarea id="note-text" class="big" style="min-height:200px" placeholder="Что непонятно, что уточнить, пример, мысль...">'+esc(c.note||"")+'</textarea>'+
+      '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button id="note-save" style="background:#10b981;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600">Сохранить</button>'+
+        '<button id="note-clear" style="background:#ef4444;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.95rem">Удалить</button>'+
+        '<button id="note-cancel" style="background:#e2e8f0;color:#0f172a;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:.95rem">Отмена</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  document.getElementById("note-save").onclick = function(){ c.note = document.getElementById("note-text").value.trim(); save(); modal.remove(); renderTopics(); };
+  document.getElementById("note-clear").onclick = function(){ if(!confirm("Удалить?")) return; c.note=""; save(); modal.remove(); renderTopics(); };
+  document.getElementById("note-cancel").onclick = function(){modal.remove();};
+  document.getElementById("note-close").onclick = function(){modal.remove();};
+  modal.onclick = function(e){if(e.target===modal) modal.remove();};
+};
+
+window.viewCard = function(id){
+  var c = cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var old = document.getElementById("modal-view"); if(old) old.remove();
   var modal = document.createElement("div");
   modal.id = "modal-view";
   modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.85);z-index:9999;overflow-y:auto;padding:70px 14px 30px 14px;-webkit-overflow-scrolling:touch";
   var imgHtml = c.image ? '<img src="'+esc(c.image)+'" style="max-width:100%;border-radius:6px;margin:10px 0">' : '';
+  var noteHtml = c.note ? '<div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:10px;border-radius:6px;margin:10px 0;white-space:pre-wrap"><b>📝 Заметка:</b>\n'+esc(c.note)+'</div>' : '';
   modal.innerHTML =
     '<button id="modal-close" style="position:fixed;top:12px;right:12px;background:#ef4444;color:#fff;border:none;width:48px;height:48px;border-radius:50%;font-size:1.5rem;cursor:pointer;z-index:10000;box-shadow:0 3px 10px rgba(0,0,0,.4);line-height:1;padding:0">✕</button>'+
-    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:640px;margin:0 auto">'+
-      '<h3 style="margin:0 0 10px">'+esc(c.question)+'</h3>'+
-      imgHtml+
+    '<div style="background:#fff;border-radius:12px;padding:18px;max-width:640px;margin:0 auto;color:#0f172a">'+
+      '<h3 style="margin:0 0 10px">'+esc(c.question)+'</h3>'+imgHtml+noteHtml+
       '<h4 style="margin:14px 0 6px;color:#10b981">ПЛАН</h4>'+
       '<pre style="white-space:pre-wrap;font-family:inherit;background:#f0fdf4;padding:12px;border-radius:6px;font-size:.9rem;margin:0">'+esc(c.plan)+'</pre>'+
       '<h4 style="margin:14px 0 6px;color:#3b82f6">ОТВЕТ</h4>'+
@@ -332,27 +495,7 @@ window.viewCard = function(id){
   document.body.appendChild(modal);
   document.getElementById("modal-close").onclick = function(){modal.remove();};
   document.getElementById("modal-close-2").onclick = function(){modal.remove();};
-  // Закрытие по клику на тёмный фон
   modal.onclick = function(e){if(e.target===modal) modal.remove();};
-  // Прокрутка начинается с верха
-  modal.scrollTop = 0;
-};
-
-window.editCard = function(id){
-  var c = cards.filter(function(x){return x.id===id;})[0];
-  if(!c) return;
-  var q = prompt("Вопрос:", c.question); if(q===null) return;
-  var p = prompt("План:", c.plan); if(p===null) return;
-  var a = prompt("Ответ:", c.answer); if(a===null) return;
-  var img = prompt("Картинка (URL):", c.image||""); if(img===null) return;
-  c.question = q.trim(); c.plan = p.trim(); c.answer = a.trim(); c.image = img.trim();
-  save(); renderTopics();
-};
-
-window.delCard = function(id){
-  if(!confirm("Удалить?")) return;
-  cards = cards.filter(function(x){return x.id!==id;});
-  save(); renderTopics();
 };
 
 $("export-btn").onclick = function(){
@@ -379,8 +522,8 @@ $("import-json").addEventListener("change", function(e){
         cards.push({
           id:Date.now()+Math.random(), num:d.num||"", group:d.group||"",
           question:d.question, answer:d.answer, plan:d.plan||autoPlan(d.answer),
-          image:d.image||"", learned:d.learned||false,
-          due:d.due||Date.now(), reps:d.reps||0, interval:d.interval||0, ease:d.ease||2.5
+          image:d.image||"", note:d.note||"", favorite:d.favorite||false, postponedUntil:d.postponedUntil||0,
+          learned:d.learned||false, due:d.due||Date.now(), reps:d.reps||0, interval:d.interval||0, ease:d.ease||2.5
         });
         added++;
       });
@@ -397,30 +540,122 @@ $("clear-all").onclick = function(){
   cards = []; save(); renderTopics();
 };
 
+/* ============ УЧЁБА ============ */
 function renderStudyStart(){
   var area = $("study-area");
   if(!cards.length){area.innerHTML = "<p>Сначала импортируйте темы.</p>"; return;}
   var left = cards.filter(function(c){return !c.learned;}).length;
-  area.innerHTML = '<p>Всего тем: '+cards.length+'. Осталось изучить: '+left+'.</p><button class="btn" id="start-all">Все подряд</button> <button class="btn ghost" id="start-left">Только неизученные</button>';
-  $("start-all").onclick = function(){studyQueue = cards.slice(); nextCard();};
-  $("start-left").onclick = function(){studyQueue = cards.filter(function(c){return !c.learned;}); if(!studyQueue.length){alert("Все изучено!");return;} nextCard();};
+  var groups = {};
+  cards.forEach(function(c){ groups[c.group || "—"] = true; });
+  var totalGroups = Object.keys(groups).length;
+  var favCount = cards.filter(function(c){return c.favorite;}).length;
+  var postCount = cards.filter(function(c){return c.postponedUntil && c.postponedUntil > Date.now();}).length;
+
+  area.innerHTML =
+    '<p style="margin:0 0 14px">Всего: '+cards.length+'. Осталось изучить: '+left+'.<br>Тем (групп): '+totalGroups+'. Избранных: '+favCount+'. Отложенных: '+postCount+'.</p>'+
+    '<h4 style="margin:14px 0 8px">По карточкам</h4>'+
+    '<div class="row">'+
+      '<button class="btn" id="start-all">Все подряд</button>'+
+      '<button class="btn ghost" id="start-left">Только неизученные</button>'+
+      '<button class="btn warn" id="start-fav">⭐ Только избранные</button>'+
+      '<button class="btn ghost" id="start-post">⏰ Отложенные</button>'+
+    '</div>'+
+    '<h4 style="margin:22px 0 8px">По темам целиком</h4>'+
+    '<p class="hint" style="margin:0 0 8px">Показывается вопрос экзамена, отвечаешь по памяти, потом видишь эталон. Оценка — одна на всю тему.</p>'+
+    '<div class="row">'+
+      '<button class="btn ok" id="start-topic-all">Все темы подряд</button>'+
+      '<button class="btn ghost" id="start-topic-left">Только неизученные</button>'+
+    '</div>';
+
+  $("start-all").onclick = function(){studyQueue = cards.slice(); studyMode="cards"; nextCard();};
+  $("start-left").onclick = function(){
+    studyQueue = cards.filter(function(c){return !c.learned;});
+    if(!studyQueue.length){alert("Все изучено!");return;}
+    studyMode="cards"; nextCard();
+  };
+  $("start-fav").onclick = function(){
+    studyQueue = cards.filter(function(c){return c.favorite;});
+    if(!studyQueue.length){alert("Нет избранных карточек. Нажми ⭐ в Теме.");return;}
+    studyMode="cards"; nextCard();
+  };
+  $("start-post").onclick = function(){
+    studyQueue = cards.filter(function(c){return c.postponedUntil && c.postponedUntil > Date.now();});
+    if(!studyQueue.length){alert("Нет отложенных карточек.");return;}
+    studyMode="cards"; nextCard();
+  };
+
+  $("start-topic-all").onclick = function(){
+    studyQueue = buildTopicQueue(false);
+    studyMode="topics"; nextTopic();
+  };
+  $("start-topic-left").onclick = function(){
+    studyQueue = buildTopicQueue(true);
+    if(!studyQueue.length){alert("Все темы изучены!");return;}
+    studyMode="topics"; nextTopic();
+  };
+}
+
+function buildTopicQueue(onlyUnlearned){
+  var groups = {};
+  cards.forEach(function(c){
+    var g = c.group || "—";
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(c);
+  });
+  var list = [];
+  Object.keys(groups).sort(function(a,b){return (parseInt(a)||0)-(parseInt(b)||0);}).forEach(function(g){
+    var gCards = groups[g];
+    var allLearned = gCards.every(function(c){return c.learned;});
+    if(onlyUnlearned && allLearned) return;
+    list.push({group: g, title: QUESTION_TITLES[g] || ("Тема " + g), cards: gCards});
+  });
+  return list;
 }
 
 function nextCard(){
   var area = $("study-area");
-  if(!studyQueue.length){area.innerHTML = "<p>Готово!</p>"; return;}
+  if(!studyQueue.length){area.innerHTML = "<p>✅ Готово!</p>"; return;}
   cur = studyQueue.shift();
   var imgHtml = cur.image ? '<img class="card-img" src="'+esc(cur.image)+'">' : '';
+  var noteHtml = cur.note ? '<div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:10px;border-radius:6px;margin:10px 0;font-size:.88rem;white-space:pre-wrap"><b>📝 Заметка:</b>\n'+esc(cur.note)+'</div>' : '';
   var learnedTag = cur.learned ? ' <span class="pill" style="background:#d1fae5;color:#065f46">Изучено</span>' : '';
-  area.innerHTML = '<h3>Вопрос'+learnedTag+'</h3><p><strong>'+esc(cur.question)+'</strong></p>'+imgHtml+'<label>Ответ:</label><textarea id="recall"></textarea><button class="btn" id="reveal" style="margin-top:10px">Показать план</button><div id="ans" style="display:none"><div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div><details><summary style="cursor:pointer">Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details><p>Насколько легко?</p><div class="rating"><button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button></div><div style="margin-top:10px"><button class="btn ghost mini" id="toggle-learn">'+(cur.learned?'Снять отметку изучено':'✓ Отметить изучено')+'</button></div></div>';
+  var isPost = cur.postponedUntil && cur.postponedUntil > Date.now();
+  var postTag = isPost ? ' <span class="pill" style="background:#fed7aa;color:#7c2d12">⏰ отложено</span>' : '';
+  var favTag = cur.favorite ? ' <span class="pill" style="background:#fef3c7;color:#92400e">⭐</span>' : '';
+
+  area.innerHTML = '<h3>Вопрос'+learnedTag+postTag+favTag+'</h3><p><strong>'+esc(cur.question)+'</strong></p>'+imgHtml+noteHtml+
+    '<label>Ответ:</label><textarea id="recall" class="big" placeholder="Своими словами..."></textarea>'+
+    '<button class="btn" id="reveal" style="margin-top:10px">Показать план</button>'+
+    '<div id="ans" style="display:none">'+
+      '<div class="answer plan"><b>План:</b>\n'+esc(cur.plan)+'</div>'+
+      '<details><summary style="cursor:pointer">Полный текст</summary><div class="answer">'+esc(cur.answer)+'</div></details>'+
+      '<p>Насколько легко?</p>'+
+      '<div class="rating">'+
+        '<button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button>'+
+      '</div>'+
+      '<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">'+
+        '<button class="btn ghost mini" id="toggle-learn">'+(cur.learned?'Снять отметку':'✓ Отметить изучено')+'</button>'+
+        '<button class="btn ghost mini" id="toggle-fav">'+(cur.favorite?'Убрать ⭐':'⭐ В избранное')+'</button>'+
+        '<button class="btn ghost mini" id="postpone-btn">⏰ Отложить на 3 дня</button>'+
+        '<button class="btn ghost mini" id="edit-note-btn">✎ Заметка</button>'+
+      '</div>'+
+    '</div>';
+
   $("reveal").onclick = function(){$("ans").style.display="block";$("reveal").style.display="none";};
   $("toggle-learn").onclick = function(){cur.learned = !cur.learned; save(); nextCard();};
+  $("toggle-fav").onclick = function(){cur.favorite = !cur.favorite; save(); nextCard();};
+  $("postpone-btn").onclick = function(){
+    cur.postponedUntil = Date.now() + 3*86400000;
+    save();
+    alert("Отложено на 3 дня");
+    nextCard();
+  };
+  $("edit-note-btn").onclick = function(){ editNote(cur.id); };
   document.querySelectorAll(".rating button").forEach(function(b){b.onclick=function(){rateCard(parseInt(b.dataset.q));};});
 }
 
 function rateCard(q){
   var now = Date.now();
-  // Оценка "Норм" или "Легко" → автоматически помечаем как изученное
   if(q >= 2) cur.learned = true;
   if(q===0){cur.reps=0;cur.interval=0;cur.due=now+10*60*1000;}
   else{
@@ -432,33 +667,71 @@ function rateCard(q){
   save(); nextCard();
 }
 
-/* ============ СВОДКА ============ */
+function nextTopic(){
+  var area = $("study-area");
+  if(!studyQueue.length){area.innerHTML = '<p>✅ Все темы пройдены.</p>'; return;}
+  curTopic = studyQueue.shift();
+  var g = curTopic.group, title = curTopic.title, gCards = curTopic.cards;
+  area.innerHTML =
+    '<div style="font-size:.75rem;color:#64748b;font-weight:600;text-transform:uppercase">Вопрос '+g+'</div>'+
+    '<h3 style="margin:4px 0 12px">'+esc(title)+'</h3>'+
+    '<p class="hint">Тема содержит '+gCards.length+' подтем. Постарайся вспомнить всё.</p>'+
+    '<label>Твой ответ:</label>'+
+    '<textarea id="recall" class="big" placeholder="Напиши как можно подробнее..."></textarea>'+
+    '<button class="btn" id="reveal" style="margin-top:10px">Показать эталон</button>'+
+    '<div id="ans" style="display:none">'+
+      '<h4 style="margin:16px 0 8px;color:#10b981">План (по подтемам)</h4>'+
+      gCards.map(function(c){
+        var noteIn = c.note ? '<div style="background:#fffbeb;border-left:3px solid #f59e0b;padding:8px;border-radius:6px;margin-top:8px;font-size:.82rem;white-space:pre-wrap"><b>📝 Заметка:</b> '+esc(c.note)+'</div>' : '';
+        return '<div class="topic-part">'+
+          '<div class="pt">'+esc(c.question)+'</div>'+
+          '<pre style="white-space:pre-wrap;font-family:inherit;font-size:.85rem;margin:0">'+esc(c.plan)+'</pre>'+noteIn+
+        '</div>';
+      }).join('')+
+      '<h4 style="margin:16px 0 8px;color:#3b82f6">Полный ответ</h4>'+
+      gCards.map(function(c){
+        return '<div class="topic-answer"><b>'+esc(c.question)+'</b>\n\n'+esc(c.answer)+'</div>';
+      }).join('')+
+      '<p style="margin-top:16px">Оцени свой ответ по всей теме:</p>'+
+      '<div class="rating">'+
+        '<button data-q="0">Снова</button><button data-q="1">Трудно</button><button data-q="2">Норм</button><button data-q="3">Легко</button>'+
+      '</div>'+
+    '</div>';
+  $("reveal").onclick = function(){$("ans").style.display="block";$("reveal").style.display="none";};
+  document.querySelectorAll(".rating button").forEach(function(b){b.onclick = function(){rateTopic(parseInt(b.dataset.q));};});
+}
+
+function rateTopic(q){
+  var now = Date.now();
+  curTopic.cards.forEach(function(c){
+    if(q >= 2) c.learned = true;
+    if(q === 0){c.reps = 0; c.interval = 0; c.due = now + 10*60*1000;}
+    else {
+      if(c.reps === 0) c.interval = q===1?1:q===2?1:3;
+      else if(c.reps === 1) c.interval = q===1?3:q===2?6:10;
+      else c.interval = Math.round(c.interval * c.ease);
+      c.reps++; c.due = now + c.interval*86400000;
+    }
+  });
+  save(); nextTopic();
+}
+
 function renderSummary(){
   var totalCards = cards.length;
   var learnedCards = cards.filter(function(c){return c.learned;}).length;
   var pct = totalCards ? Math.round(learnedCards/totalCards*100) : 0;
-  $("overall-progress").innerHTML = '<div class="big-pbar"><div style="width:'+pct+'%"></div><span>'+learnedCards+' из '+totalCards+' карточек изучено · '+pct+'%</span></div>';
-
+  $("overall-progress").innerHTML = '<div class="big-pbar"><div style="width:'+pct+'%"></div><span>'+learnedCards+' из '+totalCards+' · '+pct+'%</span></div>';
   var html = "";
-  SUMMARY.forEach(function(item){
-    var group = cards.filter(function(c){return c.group === item.g;});
+  Object.keys(QUESTION_TITLES).sort(function(a,b){return parseInt(a)-parseInt(b);}).forEach(function(g){
+    var group = cards.filter(function(c){return c.group === g;});
     var gTotal = group.length;
     var gLearned = group.filter(function(c){return c.learned;}).length;
-    var status = "none", statusIcon = "○", cls = "sum-item none";
-    if(gTotal > 0 && gLearned === gTotal){status="full";statusIcon="✓";cls="sum-item full";}
-    else if(gLearned > 0){status="part";statusIcon="◐";cls="sum-item part";}
-
-    // Фильтр
+    var status = "none", icon = "○", cls = "sum-item none";
+    if(gTotal > 0 && gLearned === gTotal){status="full";icon="✓";cls="sum-item full";}
+    else if(gLearned > 0){status="part";icon="◐";cls="sum-item part";}
     if(summaryFilter === "learned" && status !== "full") return;
     if(summaryFilter === "left" && status === "full") return;
-
-    var dupCls = item.dup ? " sum-dup" : "";
-    html += '<div class="'+cls+'">';
-    html += '<div class="sum-num">'+item.n+'.</div>';
-    html += '<div class="sum-body"><p class="sum-q'+dupCls+'">'+esc(item.q)+'</p>';
-    html += '<p class="sum-meta">Тема '+item.g+(gTotal?' · '+gLearned+'/'+gTotal+' частей':' · карточек нет')+'</p></div>';
-    html += '<div class="sum-status">'+statusIcon+'</div>';
-    html += '</div>';
+    html += '<div class="'+cls+'"><div class="sum-num">'+g+'.</div><div class="sum-body"><p class="sum-q">'+esc(QUESTION_TITLES[g])+'</p><p class="sum-meta">Тема '+g+(gTotal?' · '+gLearned+'/'+gTotal:' · нет карточек')+'</p></div><div class="sum-status">'+icon+'</div></div>';
   });
   $("summary-list").innerHTML = html || '<p class="hint">Ничего не найдено.</p>';
 }
